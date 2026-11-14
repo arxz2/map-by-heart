@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import '@fontsource-variable/inter'
 import { countryGeometry, createCountryCatalog, countrySuggestions } from './countries'
 import type { Country } from './countries'
+import { countryHints } from './country-hints'
 import type { CountryRegion } from './regions'
 import { defaultLanguage, languages } from './locales'
 import type { LanguagePack } from './locales/types'
@@ -124,6 +125,30 @@ function CountryForm(props: CountryFormProps) {
 }
 
 type RegionScore = { region: CountryRegion; label: string; count: number; total: number }
+
+function ExploreHints({ code, language }: { code: string; language: LanguagePack }) {
+  const [revealed, setRevealed] = useState(0)
+  const { messages: t } = language
+  const hints = countryHints(code, language.locale)
+  if (!hints.length) return null
+
+  return (
+    <div className="explore-hints">
+      <button type="button" className="reset-button" aria-controls="explore-hint-list"
+        aria-disabled={revealed === hints.length} onClick={() => setRevealed(count => Math.min(count + 1, hints.length))}>
+        {revealed === 0 ? t.showHint : revealed === hints.length ? t.noMoreHints : t.nextHint}
+      </button>
+      <div id="explore-hint-list" aria-live="polite">
+        {revealed > 0 && <ol>{hints.slice(0, revealed).map(({ kind, name, note }, index) => (
+          <li key={index}>
+            <strong>{t.hintKinds[kind]} · {name}</strong>
+            {note && <p>{note}</p>}
+          </li>
+        ))}</ol>}
+      </div>
+    </div>
+  )
+}
 
 function RegionProgress({ scores }: { scores: RegionScore[] }) {
   return (
@@ -428,6 +453,7 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
             {playActive && <button type="button" className="next-button" aria-label={t.nextCountry} onClick={selectNext}>
               <span>{t.nextCountry}</span> <kbd>Tab</kbd><Icon name="arrow" size={19}/>
             </button>}
+            {mode === 'explore' && country && <ExploreHints key={country.code} code={country.code} language={language}/>}
           </section>
         </>}
       </aside>}

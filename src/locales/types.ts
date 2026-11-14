@@ -1,4 +1,5 @@
 import type { Region } from '../regions'
+import type { HintKind } from '../country-hints'
 
 export type LanguagePack = {
   locale: string
@@ -81,6 +82,10 @@ export type LanguagePack = {
     typeName: string
     suggestions: string
     wrongAnswer: (name: string) => string
+    showHint: string
+    nextHint: string
+    noMoreHints: string
+    hintKinds: Record<HintKind, string>
     politicalMap: string
     mapZoom: string
     zoomIn: string

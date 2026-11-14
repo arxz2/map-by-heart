@@ -124,6 +124,11 @@ h1, h2, p { margin: 0; }
 .challenge-note { grid-column: 1 / -1; padding: 12px 17px; background: var(--wash); color: var(--accent-dark); font-size: 13px; font-weight: 650; line-height: 1.45; }
 .progress-panel, .play-panel { padding: 17px; }
 .progress-reset { margin-top: 8px; }
+.explore-hints { margin-top: 8px; }
+.explore-hints button[aria-disabled="true"] { cursor: default; color: var(--muted); background: var(--paper); }
+.explore-hints ol { list-style: none; display: grid; gap: 8px; margin: 8px 0 0; padding: 0; font-size: 13px; }
+.explore-hints li { padding: 8px 10px; border-radius: 8px; background: var(--wash); }
+.explore-hints li p { margin-top: 3px; color: var(--muted); line-height: 1.4; }
 .mode-info .play-instruction { margin: 0 0 16px; }
 #root:has(.learn-layout) { display: flex; flex-direction: column; height: 100dvh; }
 #root:has(.learn-layout) > .topbar { flex-shrink: 0; }
@@ -236,6 +241,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 10px; }
   .compact-play .next-button { display: grid; place-items: center; width: 44px; height: 44px; margin: 0; }
   .compact-play .progress-block, .compact-play .round-result-summary { grid-column: 1 / -1; }
   .compact-play .round-result-summary { grid-row: 1; }
+  .compact-play .explore-hints { grid-column: 1 / -1; margin-top: 0; }
 }
 @media (max-width: 490px) {
   .page-width { width: calc(100% - 28px); }
