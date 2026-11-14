@@ -10,9 +10,10 @@ Map by Heart is a browser-based geography quiz in English and Russian. Pick a co
 
 ### Game modes
 
-The mode dropdown sits between **Settings** and the main action in the header. It shows the selected mode and is disabled during a timed round.
+The mode dropdown sits next to **Settings** in the header. It shows the selected mode and is disabled during a timed round.
 
 - **Explore** lets you practice at your own pace. **Start over** resets your progress.
+- **Learn** shows country names on the map. Use the search field above the map to locate a country by name.
 - **Timed game** starts a 15-minute round with three lives when you press **Start game**. Each submitted wrong answer costs one life. Tab and Shift+Tab are free. The timer keeps running while Settings are open or the tab is in the background. Regions, small countries, and disputed territories are locked while the timer runs.
 
 A timed round ends when time or lives run out, all entries are guessed, or you press **End game**. The results dialog shows your score, accuracy, wrong answers, time played, and lives left. It also shows progress by region when the round covers multiple regions. **Copy result** copies the result to the clipboard or displays the text for manual copying if clipboard access is unavailable.

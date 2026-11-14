@@ -18,7 +18,6 @@ export type LanguagePack = {
     startGame: string
     restartExplore: string
     endGame: string
-    timedStartHint: string
     roundEndedManually: string
     accuracy: string
     mistakes: string
@@ -33,7 +32,11 @@ export type LanguagePack = {
     disabled: string
     timedMode: string
     exploreMode: string
+    learnMode: string
+    countrySearch: string
     gameMode: string
+    modeInfo: string
+    modeDescriptions: Record<'timed' | 'explore' | 'learn', string>
     timeLeft: string
     lives: string
     roundOver: string
@@ -74,7 +77,6 @@ export type LanguagePack = {
     selectCountryHint: string
     correct: (name: string) => string
     nextCountry: string
-    mapHelp: string
     countryName: string
     typeName: string
     suggestions: string

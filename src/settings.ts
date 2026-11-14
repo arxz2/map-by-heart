@@ -10,7 +10,7 @@ export const minDefaultZoom = 1
 export const maxZoom = 22
 
 export type GameSettings = {
-  mode: 'explore' | 'timed'
+  mode: 'explore' | 'timed' | 'learn'
   locale: string
   selectedRegions: CountryRegion[]
   includeSmall: boolean
@@ -45,7 +45,7 @@ export function loadSettings(): GameSettings {
     }
     const selectedRegions = saved?.selectedRegions
     return {
-      mode: saved?.mode === 'timed' ? 'timed' : defaults.mode,
+      mode: saved?.mode === 'timed' || saved?.mode === 'learn' ? saved.mode : defaults.mode,
       locale: languages.find(language => language.locale === saved?.locale)?.locale ?? locale,
       selectedRegions: Array.isArray(selectedRegions) ? allRegions.filter(region => selectedRegions.includes(region)) : defaults.selectedRegions,
       includeSmall: typeof saved?.includeSmall === 'boolean' ? saved.includeSmall : defaults.includeSmall,
