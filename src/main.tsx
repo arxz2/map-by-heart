@@ -320,7 +320,7 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
   }
 
   return (
-    <div className="game-layout">
+    <div className={timed && !selectionDisabled && !done ? 'game-layout round-active' : 'game-layout'}>
       <section className="panel map-panel" aria-label={t.map}>
         <div className="map-header">
           <h2><Icon name="layers" size={19}/>{noRegions ? t.noRegions : wholeWorld || selectedRegions.length === 1
@@ -372,13 +372,18 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
               onAnswer={correct => answer(country.code, correct)}/>
           ) : (
             <>
-              <h2>{noRegions ? t.chooseRegions : done ? t.gameComplete : t.chooseCountry}</h2>
-              <p className="play-instruction">{noRegions ? t.selectRegionHint : waitingToStart ? t.timedStartHint : done ? t.gameCompleteHint : t.selectCountryHint}</p>
-              {lastAnswer && <p className="last-answer" role="status"><Icon name="check" size={17}/>{t.correct(lastAnswer.name)}</p>}
+              <div className="answer-prompt">
+                <h2>{noRegions ? t.chooseRegions : done ? t.gameComplete : t.chooseCountry}</h2>
+                <p className="play-instruction">{noRegions ? t.selectRegionHint : waitingToStart ? t.timedStartHint : done ? t.gameCompleteHint : t.selectCountryHint}</p>
+                {lastAnswer && <p className="last-answer" role="status"><Icon name="check" size={17}/>{t.correct(lastAnswer.name)}</p>}
+              </div>
+              {timed && !selectionDisabled && !done && <div className="answer-entry answer-preview">
+                <input type="text" disabled aria-label={t.countryName} placeholder={t.chooseCountry} />
+              </div>}
             </>
           )}
-          {!done && !selectionDisabled && <button type="button" className="next-button" onClick={selectNext}>
-            {t.nextCountry} <kbd>Tab</kbd>
+          {!done && !selectionDisabled && <button type="button" className="next-button" aria-label={t.nextCountry} onClick={selectNext}>
+            <span>{t.nextCountry}</span> <kbd>Tab</kbd><Icon name="arrow" size={19}/>
           </button>}
         </section>
         <section className="map-help">
@@ -487,6 +492,8 @@ function App() {
     return () => controller.abort()
   }, [request])
 
+  const roundAction = roundRunning ? t.endGame : mode === 'timed' ? t.startGame : t.restartExplore
+
   return (
     <>
       <header className="topbar">
@@ -496,21 +503,26 @@ function App() {
             Map by Heart
           </h1>
           <div className="topbar-actions">
-            <button className="reset-button" type="button" aria-haspopup="dialog" aria-controls="settings"
-              onClick={() => settings.current?.showModal()}><Icon name="settings" size={17}/>{t.settings}</button>
-            <select className="mode-select" aria-label={t.gameMode} value={mode} disabled={roundRunning} onChange={event => {
-              const nextGameMode = event.currentTarget.value as GameSettings['mode']
-              updateSettings({ mode: nextGameMode })
-              resetRound(null)
-              if (nextGameMode === 'explore') gameMain.current?.focus({ preventScroll: true })
-            }}>
-              <option value="timed">{t.timedMode}</option>
-              <option value="explore">{t.exploreMode}</option>
-            </select>
-            <button className="reset-button" type="button" disabled={!world}
+            <button className="reset-button topbar-button" type="button" aria-haspopup="dialog" aria-controls="settings"
+              aria-label={t.settings} title={t.settings} onClick={() => settings.current?.showModal()}>
+              <Icon name="settings" size={17}/><span>{t.settings}</span>
+            </button>
+            <div className="topbar-mode">
+              <div className="mode-symbol" aria-hidden="true"><Icon name={mode === 'timed' ? 'clock' : 'globe'} size={17}/></div>
+              <select className="mode-select" aria-label={t.gameMode} value={mode} disabled={roundRunning} onChange={event => {
+                const nextGameMode = event.currentTarget.value as GameSettings['mode']
+                updateSettings({ mode: nextGameMode })
+                resetRound(null)
+                if (nextGameMode === 'explore') gameMain.current?.focus({ preventScroll: true })
+              }}>
+                <option value="timed">{t.timedMode}</option>
+                <option value="explore">{t.exploreMode}</option>
+              </select>
+            </div>
+            <button className="reset-button topbar-button" type="button" disabled={!world} aria-label={roundAction} title={roundAction}
               onClick={() => roundRunning ? finishTimedRound(Date.now()) : newRound()}>
               <Icon name={roundRunning ? 'stop' : mode === 'timed' ? 'play' : 'reset'} size={17}/>
-              {roundRunning ? t.endGame : mode === 'timed' ? t.startGame : t.restartExplore}
+              <span>{roundAction}</span>
             </button>
           </div>
         </div>

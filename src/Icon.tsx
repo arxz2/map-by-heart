@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-export type IconName = 'globe' | 'pin' | 'plus' | 'minus' | 'fit' | 'reset' | 'arrow' | 'check' | 'target' | 'alert' | 'layers' | 'trophy' | 'settings' | 'play' | 'stop'
+export type IconName = 'globe' | 'pin' | 'plus' | 'minus' | 'fit' | 'reset' | 'arrow' | 'check' | 'target' | 'alert' | 'layers' | 'trophy' | 'settings' | 'play' | 'stop' | 'clock'
 
 const paths: Record<IconName, ReactNode> = {
   globe: <><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18M5 7.5h14M5 16.5h14"/></>,
@@ -9,6 +9,7 @@ const paths: Record<IconName, ReactNode> = {
   minus: <path d="M5 12h14"/>,
   play: <path d="M8 5.5l10 6.5-10 6.5z"/>,
   stop: <rect x="6" y="6" width="12" height="12" rx="2"/>,
+  clock: <><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></>,
   fit: <path d="M9 4H4v5m11-5h5v5m0 6v5h-5M4 15v5h5"/>,
   reset: <path fill="currentColor" stroke="none" d="M17.66 6.34C16.21 4.89 14.22 4 12 4c-4.42 0-8 3.58-8 8s3.58 8 8 8c3.73 0 6.84-2.55 7.73-6h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4z"/>,
   settings: <><path d="M4 6h8m4 0h4M4 12h2m4 0h10M4 18h10m4 0h2"/><circle cx="14" cy="6" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="18" r="2"/></>,
