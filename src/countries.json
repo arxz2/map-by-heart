@@ -1,0 +1,617 @@
+{
+  "AD": {
+    "region": "europe"
+  },
+  "AE": {
+    "region": "middle-east-central-asia"
+  },
+  "AF": {
+    "region": "middle-east-central-asia"
+  },
+  "AG": {
+    "region": "americas"
+  },
+  "AL": {
+    "region": "europe"
+  },
+  "AM": {
+    "region": "middle-east-central-asia"
+  },
+  "AO": {
+    "region": "africa"
+  },
+  "AR": {
+    "region": "americas"
+  },
+  "AT": {
+    "region": "europe"
+  },
+  "AU": {
+    "region": "asia-oceania"
+  },
+  "AZ": {
+    "region": "middle-east-central-asia"
+  },
+  "BA": {
+    "region": "europe"
+  },
+  "BB": {
+    "region": "americas"
+  },
+  "BD": {
+    "region": "asia-oceania"
+  },
+  "BE": {
+    "region": "europe"
+  },
+  "BF": {
+    "region": "africa"
+  },
+  "BG": {
+    "region": "europe"
+  },
+  "BH": {
+    "region": "middle-east-central-asia"
+  },
+  "BI": {
+    "region": "africa"
+  },
+  "BJ": {
+    "region": "africa"
+  },
+  "BN": {
+    "region": "asia-oceania"
+  },
+  "BO": {
+    "region": "americas"
+  },
+  "BR": {
+    "region": "americas"
+  },
+  "BS": {
+    "region": "americas"
+  },
+  "BT": {
+    "region": "asia-oceania"
+  },
+  "BW": {
+    "region": "africa"
+  },
+  "BY": {
+    "region": "europe"
+  },
+  "BZ": {
+    "region": "americas"
+  },
+  "CA": {
+    "region": "americas"
+  },
+  "CD": {
+    "region": "africa"
+  },
+  "CF": {
+    "region": "africa"
+  },
+  "CG": {
+    "region": "africa"
+  },
+  "CH": {
+    "region": "europe"
+  },
+  "CI": {
+    "region": "africa"
+  },
+  "CL": {
+    "region": "americas"
+  },
+  "CM": {
+    "region": "africa"
+  },
+  "CN": {
+    "region": "asia-oceania"
+  },
+  "CO": {
+    "region": "americas"
+  },
+  "CR": {
+    "region": "americas"
+  },
+  "CU": {
+    "region": "americas"
+  },
+  "CV": {
+    "region": "africa"
+  },
+  "CY": {
+    "region": "middle-east-central-asia"
+  },
+  "CZ": {
+    "region": "europe"
+  },
+  "DE": {
+    "region": "europe"
+  },
+  "DJ": {
+    "region": "africa"
+  },
+  "DK": {
+    "region": "europe"
+  },
+  "DM": {
+    "region": "americas"
+  },
+  "DO": {
+    "region": "americas"
+  },
+  "DZ": {
+    "region": "africa"
+  },
+  "EC": {
+    "region": "americas"
+  },
+  "EE": {
+    "region": "europe"
+  },
+  "EG": {
+    "region": "africa"
+  },
+  "EH": {
+    "region": "africa",
+    "disputed": true
+  },
+  "ER": {
+    "region": "africa"
+  },
+  "ES": {
+    "region": "europe"
+  },
+  "ET": {
+    "region": "africa"
+  },
+  "FI": {
+    "region": "europe"
+  },
+  "FJ": {
+    "region": "asia-oceania"
+  },
+  "FK": {
+    "region": "americas",
+    "disputed": true
+  },
+  "FM": {
+    "region": "asia-oceania"
+  },
+  "FR": {
+    "region": "europe"
+  },
+  "GA": {
+    "region": "africa"
+  },
+  "GB": {
+    "region": "europe"
+  },
+  "GD": {
+    "region": "americas"
+  },
+  "GE": {
+    "region": "middle-east-central-asia"
+  },
+  "GF": {
+    "region": "americas"
+  },
+  "GH": {
+    "region": "africa"
+  },
+  "GL": {
+    "region": "europe"
+  },
+  "GM": {
+    "region": "africa"
+  },
+  "GN": {
+    "region": "africa"
+  },
+  "GQ": {
+    "region": "africa"
+  },
+  "GR": {
+    "region": "europe"
+  },
+  "GT": {
+    "region": "americas"
+  },
+  "GW": {
+    "region": "africa"
+  },
+  "GY": {
+    "region": "americas"
+  },
+  "HN": {
+    "region": "americas"
+  },
+  "HR": {
+    "region": "europe"
+  },
+  "HT": {
+    "region": "americas"
+  },
+  "HU": {
+    "region": "europe"
+  },
+  "ID": {
+    "region": "asia-oceania"
+  },
+  "IE": {
+    "region": "europe"
+  },
+  "IL": {
+    "region": "middle-east-central-asia"
+  },
+  "IN": {
+    "region": "asia-oceania"
+  },
+  "IQ": {
+    "region": "middle-east-central-asia"
+  },
+  "IR": {
+    "region": "middle-east-central-asia"
+  },
+  "IS": {
+    "region": "europe"
+  },
+  "IT": {
+    "region": "europe"
+  },
+  "JM": {
+    "region": "americas"
+  },
+  "JO": {
+    "region": "middle-east-central-asia"
+  },
+  "JP": {
+    "region": "asia-oceania"
+  },
+  "KE": {
+    "region": "africa"
+  },
+  "KG": {
+    "region": "middle-east-central-asia"
+  },
+  "KH": {
+    "region": "asia-oceania"
+  },
+  "KI": {
+    "region": "asia-oceania"
+  },
+  "KM": {
+    "region": "africa"
+  },
+  "KN": {
+    "region": "americas"
+  },
+  "KP": {
+    "region": "asia-oceania"
+  },
+  "KR": {
+    "region": "asia-oceania"
+  },
+  "KW": {
+    "region": "middle-east-central-asia"
+  },
+  "KZ": {
+    "region": "middle-east-central-asia"
+  },
+  "LA": {
+    "region": "asia-oceania"
+  },
+  "LB": {
+    "region": "middle-east-central-asia"
+  },
+  "LC": {
+    "region": "americas"
+  },
+  "LI": {
+    "region": "europe"
+  },
+  "LK": {
+    "region": "asia-oceania"
+  },
+  "LR": {
+    "region": "africa"
+  },
+  "LS": {
+    "region": "africa"
+  },
+  "LT": {
+    "region": "europe"
+  },
+  "LU": {
+    "region": "europe"
+  },
+  "LV": {
+    "region": "europe"
+  },
+  "LY": {
+    "region": "africa"
+  },
+  "MA": {
+    "region": "africa"
+  },
+  "MC": {
+    "region": "europe"
+  },
+  "MD": {
+    "region": "europe"
+  },
+  "ME": {
+    "region": "europe"
+  },
+  "MG": {
+    "region": "africa"
+  },
+  "MH": {
+    "region": "asia-oceania"
+  },
+  "MK": {
+    "region": "europe"
+  },
+  "ML": {
+    "region": "africa"
+  },
+  "MM": {
+    "region": "asia-oceania"
+  },
+  "MN": {
+    "region": "asia-oceania"
+  },
+  "MR": {
+    "region": "africa"
+  },
+  "MT": {
+    "region": "europe"
+  },
+  "MU": {
+    "region": "africa"
+  },
+  "MV": {
+    "region": "asia-oceania"
+  },
+  "MW": {
+    "region": "africa"
+  },
+  "MX": {
+    "region": "americas"
+  },
+  "MY": {
+    "region": "asia-oceania"
+  },
+  "MZ": {
+    "region": "africa"
+  },
+  "NA": {
+    "region": "africa"
+  },
+  "NE": {
+    "region": "africa"
+  },
+  "NG": {
+    "region": "africa"
+  },
+  "NI": {
+    "region": "americas"
+  },
+  "NL": {
+    "region": "europe"
+  },
+  "NO": {
+    "region": "europe"
+  },
+  "NP": {
+    "region": "asia-oceania"
+  },
+  "NR": {
+    "region": "asia-oceania"
+  },
+  "NZ": {
+    "region": "asia-oceania"
+  },
+  "OM": {
+    "region": "middle-east-central-asia"
+  },
+  "PA": {
+    "region": "americas"
+  },
+  "PE": {
+    "region": "americas"
+  },
+  "PG": {
+    "region": "asia-oceania"
+  },
+  "PH": {
+    "region": "asia-oceania"
+  },
+  "PK": {
+    "region": "asia-oceania"
+  },
+  "PL": {
+    "region": "europe"
+  },
+  "PS": {
+    "region": "middle-east-central-asia"
+  },
+  "PT": {
+    "region": "europe"
+  },
+  "PW": {
+    "region": "asia-oceania"
+  },
+  "PY": {
+    "region": "americas"
+  },
+  "QA": {
+    "region": "middle-east-central-asia"
+  },
+  "RO": {
+    "region": "europe"
+  },
+  "RS": {
+    "region": "europe"
+  },
+  "RU": {
+    "region": "europe"
+  },
+  "RW": {
+    "region": "africa"
+  },
+  "SA": {
+    "region": "middle-east-central-asia"
+  },
+  "SB": {
+    "region": "asia-oceania"
+  },
+  "SC": {
+    "region": "africa"
+  },
+  "SD": {
+    "region": "africa"
+  },
+  "SE": {
+    "region": "europe"
+  },
+  "SG": {
+    "region": "asia-oceania"
+  },
+  "SI": {
+    "region": "europe"
+  },
+  "SK": {
+    "region": "europe"
+  },
+  "SL": {
+    "region": "africa"
+  },
+  "SM": {
+    "region": "europe"
+  },
+  "SN": {
+    "region": "africa"
+  },
+  "SO": {
+    "region": "africa"
+  },
+  "SR": {
+    "region": "americas"
+  },
+  "SS": {
+    "region": "africa"
+  },
+  "ST": {
+    "region": "africa"
+  },
+  "SV": {
+    "region": "americas"
+  },
+  "SY": {
+    "region": "middle-east-central-asia"
+  },
+  "SZ": {
+    "region": "africa"
+  },
+  "TD": {
+    "region": "africa"
+  },
+  "TG": {
+    "region": "africa"
+  },
+  "TH": {
+    "region": "asia-oceania"
+  },
+  "TJ": {
+    "region": "middle-east-central-asia"
+  },
+  "TL": {
+    "region": "asia-oceania"
+  },
+  "TM": {
+    "region": "middle-east-central-asia"
+  },
+  "TN": {
+    "region": "africa"
+  },
+  "TO": {
+    "region": "asia-oceania"
+  },
+  "TR": {
+    "region": "middle-east-central-asia"
+  },
+  "TT": {
+    "region": "americas"
+  },
+  "TV": {
+    "region": "asia-oceania"
+  },
+  "TW": {
+    "region": "asia-oceania",
+    "disputed": true
+  },
+  "TZ": {
+    "region": "africa"
+  },
+  "UA": {
+    "region": "europe"
+  },
+  "UG": {
+    "region": "africa"
+  },
+  "US": {
+    "region": "americas"
+  },
+  "UY": {
+    "region": "americas"
+  },
+  "UZ": {
+    "region": "middle-east-central-asia"
+  },
+  "VA": {
+    "region": "europe"
+  },
+  "VC": {
+    "region": "americas"
+  },
+  "VE": {
+    "region": "americas"
+  },
+  "VN": {
+    "region": "asia-oceania"
+  },
+  "VU": {
+    "region": "asia-oceania"
+  },
+  "WS": {
+    "region": "asia-oceania"
+  },
+  "XC": {
+    "region": "middle-east-central-asia",
+    "disputed": true
+  },
+  "XK": {
+    "region": "europe",
+    "disputed": true
+  },
+  "XS": {
+    "region": "africa",
+    "disputed": true
+  },
+  "YE": {
+    "region": "middle-east-central-asia"
+  },
+  "ZA": {
+    "region": "africa"
+  },
+  "ZM": {
+    "region": "africa"
+  },
+  "ZW": {
+    "region": "africa"
+  }
+}
