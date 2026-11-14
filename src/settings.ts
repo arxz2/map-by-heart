@@ -20,6 +20,8 @@ export type GameSettings = {
   defaultZoom: number
 }
 
+export type RoundScope = Pick<GameSettings, 'selectedRegions' | 'includeSmall' | 'includeDisputed'>
+
 const defaults: GameSettings = {
   mode: 'explore',
   locale: defaultLanguage.locale,

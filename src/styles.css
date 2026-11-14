@@ -119,6 +119,7 @@ h1, h2, p { margin: 0; }
 .legend-dot.guessed { background: var(--guessed); }
 .legend-marker { width: 8px; height: 8px; margin-inline: 1.5px; border-radius: 50%; background: var(--land-marker); }
 .sidebar { display: grid; gap: 13px; }
+.challenge-note { grid-column: 1 / -1; padding: 12px 17px; background: var(--wash); color: var(--accent-dark); font-size: 13px; font-weight: 650; line-height: 1.45; }
 .progress-panel, .play-panel { padding: 17px; }
 .round-stats { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; margin-bottom: 12px; padding-bottom: 9px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 13px; }
 .round-stats strong { margin-inline-start: 4px; color: var(--ink); font-variant-numeric: tabular-nums; }

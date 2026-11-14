@@ -13,17 +13,15 @@ import { Icon } from './Icon'
 import { WorldMap } from './WorldMap'
 import type { MapProjection, World } from './WorldMap'
 import { allRegions, loadSettings, maxZoom, minDefaultZoom, settingsStorageKey } from './settings'
-import type { GameSettings } from './settings'
+import type { GameSettings, RoundScope } from './settings'
+import { createChallengeUrl, readChallenge, roundDuration } from './challenge'
 import './styles.css'
 
-const roundDuration = 15 * 60 * 1000
 const startingLives = 3
 function formatTime(milliseconds: number) {
   const seconds = Math.floor(milliseconds / 1000)
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
 }
-
-type RoundScope = Pick<GameSettings, 'selectedRegions' | 'includeSmall' | 'includeDisputed'>
 
 function roundScope({ selectedRegions, includeSmall, includeDisputed }: RoundScope): RoundScope {
   return { selectedRegions, includeSmall, includeDisputed }
@@ -124,13 +122,14 @@ function RegionProgress({ scores }: { scores: RegionScore[] }) {
 }
 
 function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode, projection, defaultZoom, language, catalog, mode,
-  startedAt, stoppedAt, onTimedFinish }: {
+  startedAt, stoppedAt, challenge, onTimedFinish }: {
   world: World; selectedRegions: CountryRegion[]; includeSmall: boolean; includeDisputed: boolean;
   nextMode: NextMode; projection: MapProjection; language: LanguagePack; catalog: ReturnType<typeof createCountryCatalog>;
   defaultZoom: number
   mode: GameSettings['mode']
   startedAt: number | null
   stoppedAt: number | null
+  challenge: ReturnType<typeof readChallenge>
   onTimedFinish: (finishedAt: number) => void
 }) {
   const { countries, normalize } = catalog
@@ -190,13 +189,15 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
     { label: t.elapsedTime, value: formatTime(elapsed) },
     { label: t.livesRemaining, value: `${lives} / ${startingLives}` },
   ]
-  const shareText = [
-    `Map by Heart · ${t.timedMode}`,
-    t.roundScore(guessedCount, active.length),
-    resultReason,
-    regionScores.map(({ label, count, total }) => `${label} — ${count} / ${total}`).join('\n'),
-    resultStats.map(({ label, value }) => `${label} — ${value}`).join('\n'),
-  ].filter(Boolean).join('\n\n')
+  const resultSettings = [
+    { label: t.smallCountries, enabled: includeSmall },
+    { label: t.disputedTerritories, enabled: includeDisputed },
+  ].map(({ label, enabled }) => ({ label, value: enabled ? t.enabled : t.disabled }))
+  const shareText = showResults ? [
+    t.challengeShareMessage(guessedCount, active.length, formatTime(elapsed)),
+    createChallengeUrl({ scope: { selectedRegions, includeSmall, includeDisputed },
+      guessed: guessedCount, total: active.length, seconds: Math.floor(elapsed / 1000) }),
+  ].join('\n') : ''
 
   useEffect(() => {
     if (shareStatus !== 'manual') return
@@ -346,6 +347,9 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
         </div>
       </section>
       <aside className="sidebar">
+        {challenge && <p className="panel challenge-note">
+          {t.challengeMessage(challenge.guessed, challenge.total, formatTime(challenge.seconds * 1000))}
+        </p>}
         <section className="panel progress-panel" aria-label={t.gameProgress}>
           <h2>{t.overallProgress}</h2>
           <div className="score"><strong>{guessedCount}</strong><span>{t.countryTotal(active.length)}</span><b>{percent}%</b></div>
@@ -395,7 +399,7 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
           <RegionProgress scores={regionScores} />
         </section>}
         <dl className="results-stats">
-          {resultStats.map(({ label, value }) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
+          {[...resultStats, ...resultSettings].map(({ label, value }) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}
         </dl>
         {shareStatus === 'copied' && <p className="play-instruction" role="status">{t.resultCopied}</p>}
         {shareStatus === 'manual' && <label className="share-text">
@@ -412,7 +416,11 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
 }
 
 function App() {
-  const [preferences, setPreferences] = useState(loadSettings)
+  const [challenge] = useState(() => readChallenge(window.location.hash))
+  const [preferences, setPreferences] = useState<GameSettings>(() => {
+    const saved = loadSettings()
+    return challenge ? { ...saved, ...challenge.scope, mode: 'timed' } : saved
+  })
   const { locale, selectedRegions, includeSmall, includeDisputed, nextMode, projection, mode, defaultZoom } = preferences
   const language = languages.find(item => item.locale === locale) ?? defaultLanguage
   const catalog = useMemo(() => createCountryCatalog(language), [language])
@@ -426,12 +434,13 @@ function App() {
   }, [language, t])
 
   useEffect(() => {
+    if (challenge) return
     try {
       localStorage.setItem(settingsStorageKey, JSON.stringify(preferences))
     } catch {
       // Settings still apply for this session if browser storage is unavailable.
     }
-  }, [preferences])
+  }, [challenge, preferences])
 
   function updateSettings(changes: Partial<GameSettings>) {
     setPreferences(current => ({ ...current, ...changes }))
@@ -509,7 +518,8 @@ function App() {
       <main id="game-main" ref={gameMain} tabIndex={-1} className="page-width game-main">
         {world ? <Game key={round.id} world={world} {...(round.scope ?? roundScope(preferences))}
           mode={mode} nextMode={nextMode} projection={projection} defaultZoom={defaultZoom} language={language} catalog={catalog}
-          startedAt={round.startedAt} stoppedAt={round.stoppedAt} onTimedFinish={finishTimedRound}/> : (
+          startedAt={round.startedAt} stoppedAt={round.stoppedAt}
+          challenge={challenge} onTimedFinish={finishTimedRound}/> : (
           <div className="panel loading" role="status">
             {failed ? <>{t.mapError} <button type="button" className="reset-button" onClick={() => { setFailed(false); setRequest(current => current + 1) }}>{t.retry}</button></> : t.loadingMap}
           </div>

@@ -27,6 +27,10 @@ export type LanguagePack = {
     copyResult: string
     resultCopied: string
     copyResultManually: string
+    challengeMessage: (guessed: number, total: number, time: string) => string
+    challengeShareMessage: (guessed: number, total: number, time: string) => string
+    enabled: string
+    disabled: string
     timedMode: string
     exploreMode: string
     gameMode: string
