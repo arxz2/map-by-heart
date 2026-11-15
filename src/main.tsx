@@ -4,7 +4,8 @@ import { createRoot } from 'react-dom/client'
 import '@fontsource-variable/inter'
 import { countryGeometry, createCountryCatalog, countrySuggestions } from './countries'
 import type { Country } from './countries'
-import { countryHints } from './country-hints'
+import { countryHints, shuffleHintOrder } from './country-hints'
+import { hintPhotos } from './hint-photos'
 import type { CountryRegion } from './regions'
 import { defaultLanguage, languages } from './locales'
 import type { LanguagePack } from './locales/types'
@@ -127,25 +128,49 @@ function CountryForm(props: CountryFormProps) {
 type RegionScore = { region: CountryRegion; label: string; count: number; total: number }
 
 function ExploreHints({ code, language }: { code: string; language: LanguagePack }) {
-  const [revealed, setRevealed] = useState(0)
+  const [index, setIndex] = useState(-1)
+  const card = useRef<HTMLDivElement>(null)
   const { messages: t } = language
   const hints = countryHints(code, language.locale)
+  const [order] = useState(() => shuffleHintOrder(hints))
+  const current = hints[order[index]]
+  const isOpen = index >= 0
+
+  useEffect(() => {
+    if (isOpen) card.current?.focus({ preventScroll: true })
+  }, [isOpen])
+
   if (!hints.length) return null
+  const photo = current?.photoId && hintPhotos[current.photoId]
 
   return (
     <div className="explore-hints">
-      <button type="button" className="reset-button" aria-controls="explore-hint-list"
-        aria-disabled={revealed === hints.length} onClick={() => setRevealed(count => Math.min(count + 1, hints.length))}>
-        {revealed === 0 ? t.showHint : revealed === hints.length ? t.noMoreHints : t.nextHint}
-      </button>
-      <div id="explore-hint-list" aria-live="polite">
-        {revealed > 0 && <ol>{hints.slice(0, revealed).map(({ kind, name, note }, index) => (
-          <li key={index}>
-            <strong>{t.hintKinds[kind]} · {name}</strong>
-            {note && <p>{note}</p>}
-          </li>
-        ))}</ol>}
-      </div>
+      {current ? <div ref={card} className="hint-card" tabIndex={-1} role="group" aria-label={t.showHint}>
+        {hints.length > 1 && <div className="hint-navigation">
+          <button type="button" className="reset-button hint-previous" aria-label={t.previousHint}
+            aria-controls="current-hint" aria-disabled={index === 0} onClick={() => setIndex(position => Math.max(0, position - 1))}>
+            <Icon name="arrow" size={18}/>
+          </button>
+          <span>{index + 1} / {hints.length}</span>
+          <button type="button" className="reset-button hint-next" aria-label={t.nextHint}
+            aria-controls="current-hint" aria-disabled={index === hints.length - 1} onClick={() => setIndex(position => Math.min(hints.length - 1, position + 1))}>
+            <Icon name="arrow" size={18}/>
+          </button>
+        </div>}
+        <div id="current-hint" aria-live="polite" aria-atomic="true">
+          <strong>{t.hintKinds[current.kind]} · {current.name}</strong>
+          {current.note && <p>{current.note}</p>}
+          {photo && <figure className="hint-photo">
+            <img src={`${import.meta.env.BASE_URL}hint-photos/${current.photoId}.webp`} alt={photo.alt[language.locale] ?? photo.alt.en}
+              width={photo.width} height={photo.height} loading="lazy" decoding="async" />
+            <figcaption>
+              <a href={photo.source} target="_blank" rel="noreferrer">{photo.title}</a> · {photo.author} ·{' '}
+              <a href={photo.licenseUrl} target="_blank" rel="noreferrer">{photo.license}</a>
+              {current.photoId === 'gagarin' && <> · <a href="https://www.mos.ru/" target="_blank" rel="noreferrer">Mos.ru</a></>}
+            </figcaption>
+          </figure>}
+        </div>
+      </div> : <button type="button" className="reset-button" onClick={() => setIndex(0)}>{t.showHint}</button>}
     </div>
   )
 }

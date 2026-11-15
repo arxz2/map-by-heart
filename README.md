@@ -12,7 +12,7 @@ Map by Heart is a browser-based geography quiz in English and Russian. Pick a co
 
 The mode dropdown sits next to **Settings** in the header. It shows the selected mode and is disabled during a timed round.
 
-- **Explore** lets you practice at your own pace. **Hint** reveals clues for the selected country one at a time. **Start over** resets your progress.
+- **Explore** lets you practice at your own pace. **Hint** opens a card for the selected country. Use its arrows to move between clues. **Start over** resets your progress.
 - **Learn** shows country names on the map. Use the search field above the map to locate a country by name.
 - **Timed game** starts a 15-minute round with three lives when you press **Start game**. Each submitted wrong answer costs one life. Tab and Shift+Tab are free. The timer keeps running while Settings are open or the tab is in the background. Regions, small countries, and disputed territories are locked while the timer runs.
 
@@ -65,6 +65,7 @@ These counts include small countries. Game regions are based on [UN M49](https:/
 - [src/countries.json](src/countries.json) assigns entries to regions and marks disputed territories.
 - [src/country-borders.json](src/country-borders.json) lists land neighbors by country code. The list follows the map contours and includes the Spain–Morocco border. Update both entries when adding or removing a shared border.
 - [src/country-capitals.ts](src/country-capitals.ts) stores capital names, and [src/country-hints.ts](src/country-hints.ts) stores optional landmarks, people, and fictional characters with short notes. The [UN geographical names database](https://unstats.un.org/unsd/GeoInfo/geonames/About.htm) is a reference for capitals, and the [UNESCO World Heritage List](https://whc.unesco.org/en/list/) is a reference for landmarks.
+- [public/hint-photos](public/hint-photos) contains resized WebP copies. Each image is distributed under the license listed with its author and original in [src/hint-photos.ts](src/hint-photos.ts) and shown with those credits in the game.
 - [src/small-countries.json](src/small-countries.json) stores marker coordinates in longitude–latitude order. The English `name` is a reference for editing. `showMarker` controls marker visibility during play, and `hideWhenSmallOff` controls whether the **Small countries** setting excludes the entry. The two flags are independent.
 
 ## Add a language

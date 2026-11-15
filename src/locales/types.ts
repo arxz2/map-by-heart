@@ -83,8 +83,8 @@ export type LanguagePack = {
     suggestions: string
     wrongAnswer: (name: string) => string
     showHint: string
+    previousHint: string
     nextHint: string
-    noMoreHints: string
     hintKinds: Record<HintKind, string>
     politicalMap: string
     mapZoom: string
