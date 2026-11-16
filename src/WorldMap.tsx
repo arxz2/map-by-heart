@@ -525,7 +525,12 @@ export function WorldMap({ world, region, projection, defaultZoom, messages: t, 
     if (event.type !== 'pointerup' || gesture.moved ||
       Math.hypot(event.clientX - gesture.clientStart.x, event.clientY - gesture.clientStart.y) >= 5) return
     const country = gesture.country
-    if (!country || selectionDisabled || guessed.has(country.code)) return
+    if (!country) return
+    if (guessed.has(country.code)) {
+      if (gesture.pointerType === 'touch') positionTooltip(country, event.clientX, event.clientY)
+      return
+    }
+    if (selectionDisabled) return
     if (gesture.marker && country.marker && view.scale < 2.6) {
       const [x, y] = project(country.marker)!
       animateView(clampView({ scale: 2.6, x: center.x - x * 2.6, y: center.y - y * 2.6 }, layout))
@@ -535,16 +540,27 @@ export function WorldMap({ world, region, projection, defaultZoom, messages: t, 
 
   function showTooltip(event: PointerEvent<SVGElement>, country: Country) {
     if (event.pointerType !== 'mouse' || (!showLabels && !guessed.has(country.code)) ||
-      pinch.current || drag.current?.moved || !stage.current) return
+      pinch.current || drag.current?.moved) return
+    positionTooltip(country, event.clientX, event.clientY)
+  }
+
+  function positionTooltip(country: Country, clientX: number, clientY: number) {
+    if (!stage.current) return
     const bounds = stage.current.getBoundingClientRect()
-    setTooltip({ code: country.code, x: Math.min(Math.max(110, event.clientX - bounds.left), bounds.width - 110), y: Math.max(46, event.clientY - bounds.top) })
+    const inset = Math.min(110, bounds.width / 2)
+    setTooltip({ code: country.code, x: Math.min(Math.max(inset, clientX - bounds.left), bounds.width - inset),
+      y: Math.max(46, clientY - bounds.top) })
+  }
+
+  function hideHoverTooltip(event: PointerEvent<SVGElement>) {
+    if (event.pointerType === 'mouse') setTooltip(null)
   }
 
   function tooltipEvents(country: Country | undefined) {
     if (!country) return {}
     return {
       onPointerMove: (event: PointerEvent<SVGElement>) => showTooltip(event, country),
-      onPointerLeave: () => setTooltip(null),
+      onPointerLeave: hideHoverTooltip,
     }
   }
 
@@ -577,7 +593,7 @@ export function WorldMap({ world, region, projection, defaultZoom, messages: t, 
       <svg ref={svg} viewBox={`0 0 ${width} ${layout.height}`} className={`world-map ${dragging ? 'dragging' : ''} ${selectionDisabled ? 'selection-disabled' : ''}`}
         role="img" aria-label={t.politicalMap}
         onPointerDown={beginDrag} onPointerMove={moveDrag} onPointerUp={endDrag}
-        onPointerCancel={endDrag} onLostPointerCapture={endDrag} onPointerLeave={() => setTooltip(null)}>
+        onPointerCancel={endDrag} onLostPointerCapture={endDrag} onPointerLeave={hideHoverTooltip}>
         {Array.from({ length: copies }, (_, copy) => <g key={copy}
           transform={`translate(${view.x + copy * width * view.scale} ${view.y}) scale(${view.scale})`}>
           <path className="map-grid" d={grid} />
