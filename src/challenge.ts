@@ -1,30 +1,32 @@
 import { allRegions } from './settings'
-import type { RoundScope } from './settings'
+import { challengeChecksum, challengePrefix, checksumSize, decodeBase64Url, encodeBase64Url, packChallenge, payloadSize, roundDuration, unpackChallenge } from './challenge-code'
+import type { Challenge } from './challenge-code'
 
 const publishedGameUrl = 'https://arxz2.github.io/map-by-heart/'
-export const roundDuration = 15 * 60 * 1000
+export { roundDuration }
 
-type Challenge = {
-  scope: RoundScope
-  guessed: number
-  total: number
-  seconds: number
-}
-
-export function createChallengeUrl({ scope, guessed, total, seconds }: Challenge): string {
-  const url = new URL(publishedGameUrl)
-  url.hash = new URLSearchParams({
-    challenge: '1',
-    regions: allRegions.filter(region => scope.selectedRegions.includes(region)).join(','),
-    small: scope.includeSmall ? '1' : '0',
-    disputed: scope.includeDisputed ? '1' : '0',
-    score: `${guessed}/${total}`,
-    seconds: String(seconds),
-  }).toString()
-  return url.href
+export function createChallengeUrl(challenge: Challenge): string {
+  const payload = packChallenge(challenge)
+  const checksum = challengeChecksum(payload)
+  const code = encodeBase64Url(Uint8Array.of(...payload, checksum >> 8, checksum & 255))
+  return publishedGameUrl + challengePrefix + code
 }
 
 export function readChallenge(hash: string): Challenge | null {
+  return hash.startsWith('#c=') ? readCompactChallenge(hash) : readLegacyChallenge(hash)
+}
+
+function readCompactChallenge(hash: string): Challenge | null {
+  if (!hash.startsWith(challengePrefix)) return null
+  const code = hash.slice(challengePrefix.length)
+  const bytes = decodeBase64Url(code, payloadSize + checksumSize)
+  if (!bytes) return null
+  const payload = bytes.subarray(0, payloadSize)
+  const checksum = (bytes[payloadSize] << 8) | bytes[payloadSize + 1]
+  return challengeChecksum(payload) === checksum ? unpackChallenge(payload) : null
+}
+
+function readLegacyChallenge(hash: string): Challenge | null {
   const params = new URLSearchParams(hash.slice(1))
   if (params.get('challenge') !== '1') return null
 

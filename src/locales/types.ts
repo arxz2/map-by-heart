@@ -26,6 +26,7 @@ export type LanguagePack = {
     livesRemaining: string
     copyResult: string
     resultCopied: string
+    invalidChallengeLink: string
     copyResultManually: string
     challengeMessage: (guessed: number, total: number, time: string) => string
     challengeShareMessage: (guessed: number, total: number, time: string) => string

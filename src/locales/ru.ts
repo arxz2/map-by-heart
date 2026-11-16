@@ -89,6 +89,7 @@ export const ru: LanguagePack = {
     livesRemaining: "Осталось жизней",
     copyResult: "Скопировать результат",
     resultCopied: "Результат скопирован.",
+    invalidChallengeLink: "Ссылка на вызов недействительна.",
     copyResultManually: "Скопируйте результат, чтобы поделиться им",
     challengeMessage: (guessed, total, time) => `Я угадал ${guessed}/${total} стран за ${time}. Можешь меня победить?`,
     challengeShareMessage: (guessed, total, time) => `Я играл в Map by Heart и угадал ${guessed}/${total} стран за ${time}. Можешь меня победить?`,

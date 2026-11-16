@@ -17,6 +17,7 @@ import type { MapProjection, World } from './WorldMap'
 import { allRegions, loadSettings, maxZoom, minDefaultZoom, settingsStorageKey } from './settings'
 import type { GameSettings, RoundScope } from './settings'
 import { createChallengeUrl, readChallenge, roundDuration } from './challenge'
+import type { Challenge } from './challenge-code'
 import './styles.css'
 
 const startingLives = 3
@@ -196,7 +197,7 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
   mode: GameSettings['mode']
   startedAt: number | null
   stoppedAt: number | null
-  challenge: ReturnType<typeof readChallenge>
+  challenge: Challenge | null
   onStart: () => void
   onTimedFinish: (finishedAt: number) => void
 }) {
@@ -511,8 +512,7 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
   )
 }
 
-function App() {
-  const [challenge] = useState(() => readChallenge(window.location.hash))
+function App({ challenge, invalidChallenge }: { challenge: Challenge | null; invalidChallenge: boolean }) {
   const [preferences, setPreferences] = useState<GameSettings>(() => {
     const saved = loadSettings()
     return challenge ? { ...saved, ...challenge.scope, mode: 'timed' } : saved
@@ -625,6 +625,7 @@ function App() {
         </div>
       </header>
       <main id="game-main" ref={gameMain} tabIndex={-1} className="page-width game-main">
+        {invalidChallenge && <p className="panel challenge-note" role="status">{t.invalidChallengeLink}</p>}
         {world ? <Game key={round.id} world={world} {...(round.scope ?? roundScope(preferences))}
           mode={mode} nextMode={nextMode} projection={projection} defaultZoom={defaultZoom} language={language} catalog={catalog}
           startedAt={round.startedAt} stoppedAt={round.stoppedAt}
@@ -714,4 +715,7 @@ function App() {
   )
 }
 
-createRoot(document.getElementById('root')!).render(<StrictMode><App/></StrictMode>)
+const root = createRoot(document.getElementById('root')!)
+const hash = window.location.hash
+const challenge = readChallenge(hash)
+root.render(<StrictMode><App challenge={challenge} invalidChallenge={hash.startsWith('#c=') && !challenge}/></StrictMode>)

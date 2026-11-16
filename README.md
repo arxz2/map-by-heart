@@ -47,6 +47,10 @@ npm.cmd run preview
 
 Vite writes the build to `dist/`. Open [http://127.0.0.1:4173/](http://127.0.0.1:4173/) or the preview address Vite prints.
 
+### Challenge links
+
+The browser creates and reads compact `#c=2.<code>` links for timed results. The code includes the round settings, score, time, and a checksum to detect accidental changes. Anyone can recalculate the checksum for an edited result. Existing `#challenge=1&…` links also open.
+
 ## Map data and regions
 
 The base roster has **197 entries**. It includes all 193 UN member states, Vatican City, the State of Palestine, French Guiana, and Greenland. For gameplay, French Guiana is grouped with the Americas and Greenland with Europe. **Disputed territories** adds Taiwan, Kosovo, Western Sahara, Somaliland, Northern Cyprus, and the Falkland Islands (Malvinas). Their outlines remain visible when the setting is off.
@@ -74,4 +78,4 @@ These counts include small countries. Game regions are based on [UN M49](https:/
 2. Add country names and accepted aliases by code where the browser's `Intl.DisplayNames` needs an override. The optional `fold` and `wordStarts` functions customize text normalization and word matching.
 3. Register the language in [src/locales/index.ts](src/locales/index.ts) so it appears in Settings. Run the build to validate locale and country-name data, then check the translated interface and answer suggestions in a browser.
 
-Built with React, TypeScript, CSS, and Vite. D3 Geo projects the country outlines, and SVG renders the map. The game runs entirely in the browser.
+Built with React, TypeScript, CSS, and Vite. D3 Geo projects the country outlines, and SVG renders the map. Gameplay runs in the browser.

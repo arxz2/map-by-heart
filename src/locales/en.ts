@@ -72,6 +72,7 @@ export const en: LanguagePack = {
     livesRemaining: "Lives left",
     copyResult: "Copy result",
     resultCopied: "Result copied.",
+    invalidChallengeLink: "This challenge link is invalid.",
     copyResultManually: "Copy this result to share it",
     challengeMessage: (guessed, total, time) => `I guessed ${guessed}/${total} countries in ${time}. Can you beat me?`,
     challengeShareMessage: (guessed, total, time) => `I played Map by Heart and guessed ${guessed}/${total} countries in ${time}. Can you beat me?`,
