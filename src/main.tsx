@@ -1,5 +1,6 @@
-import { StrictMode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { StrictMode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent, KeyboardEvent } from 'react'
+import { flushSync } from 'react-dom'
 import { createRoot } from 'react-dom/client'
 import '@fontsource-variable/inter'
 import { countryGeometry, createCountryCatalog, countrySuggestions } from './countries'
@@ -18,9 +19,10 @@ import { allRegions, loadSettings, maxZoom, minDefaultZoom, settingsStorageKey }
 import type { GameSettings, RoundScope } from './settings'
 import { createChallengeUrl, readChallenge, roundDuration } from './challenge'
 import type { Challenge } from './challenge-code'
+import { clearRound, loadRound, roundStorageKey, saveRound, startingLives } from './round-storage'
+import type { RoundTiming, SavedRound, SelectionHistory } from './round-storage'
 import './styles.css'
 
-const startingLives = 3
 function formatTime(milliseconds: number) {
   const seconds = Math.floor(milliseconds / 1000)
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`
@@ -38,7 +40,8 @@ type CountryFormProps = {
 
 function CountryForm(props: CountryFormProps) {
   const { candidates, messages: t, normalize } = props
-  const searching = 'onFind' in props
+  const countryCode = 'country' in props ? props.country.code : undefined
+  const searching = countryCode === undefined
   const input = useRef<HTMLInputElement>(null)
   const answerEntry = useRef<HTMLDivElement>(null)
   const [value, setValue] = useState('')
@@ -50,9 +53,14 @@ function CountryForm(props: CountryFormProps) {
   const expanded = open && suggestions.length > 0
   const highlightedIndex = highlighted < suggestions.length ? highlighted : -1
 
-  useEffect(() => {
-    if (!searching && !document.querySelector('dialog[open]')) input.current?.focus({ preventScroll: true })
-  }, [searching])
+  useLayoutEffect(() => {
+    if (countryCode === undefined) return
+    setValue('')
+    setOpen(false)
+    setHighlighted(-1)
+    setWrongAnswer(null)
+    if (!document.querySelector('dialog[open]')) input.current?.focus({ preventScroll: true })
+  }, [countryCode])
 
   useEffect(() => {
     if (!expanded) return
@@ -118,9 +126,9 @@ function CountryForm(props: CountryFormProps) {
         // A touch can blur the input without a focus target before the option receives click.
         if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) setOpen(false)
       }}>
-        <input ref={input} id="country-name" type="text" role="combobox" autoComplete="off" spellCheck={false}
+        <input ref={input} id="country-name" type="text" role="combobox" autoComplete="off" autoCorrect="off" spellCheck={false}
           enterKeyHint={searching ? 'search' : undefined}
-          placeholder={searching ? t.countrySearch : t.typeName} value={value} aria-autocomplete="list" aria-expanded={expanded}
+          placeholder={searching ? t.countrySearchPlaceholder : t.typeName} value={value} aria-autocomplete="list" aria-expanded={expanded}
           aria-controls={expanded ? 'country-suggestions' : undefined}
           aria-activedescendant={expanded && highlightedIndex >= 0 ? `option-${highlightedIndex}` : undefined}
           aria-invalid={wrongAnswer !== null} aria-describedby={wrongAnswer !== null ? 'answer-feedback' : undefined}
@@ -144,50 +152,49 @@ function CountryForm(props: CountryFormProps) {
 type RegionScore = { region: CountryRegion; label: string; count: number; total: number }
 
 function ExploreHints({ code, language }: { code: string; language: LanguagePack }) {
-  const [index, setIndex] = useState(-1)
-  const card = useRef<HTMLDivElement>(null)
+  const [index, setIndex] = useState(0)
+  const [isOpen, setIsOpen] = useState(false)
   const { messages: t } = language
   const hints = countryHints(code, language.locale)
   const [order] = useState(() => shuffleHintOrder(hints))
   const current = hints[order[index]]
-  const isOpen = index >= 0
-
-  useEffect(() => {
-    if (isOpen) card.current?.focus({ preventScroll: true })
-  }, [isOpen])
 
   if (!hints.length) return null
   const photo = current?.photoId && hintPhotos[current.photoId]
 
   return (
-    <div className="explore-hints">
-      {current ? <div ref={card} className="hint-card" tabIndex={-1} role="group" aria-label={t.showHint}>
-        {hints.length > 1 && <div className="hint-navigation">
-          <button type="button" className="reset-button hint-previous" aria-label={t.previousHint}
-            aria-controls="current-hint" aria-disabled={index === 0} onClick={() => setIndex(position => Math.max(0, position - 1))}>
-            <Icon name="arrow" size={18}/>
-          </button>
-          <span>{index + 1} / {hints.length}</span>
-          <button type="button" className="reset-button hint-next" aria-label={t.nextHint}
-            aria-controls="current-hint" aria-disabled={index === hints.length - 1} onClick={() => setIndex(position => Math.min(hints.length - 1, position + 1))}>
-            <Icon name="arrow" size={18}/>
-          </button>
-        </div>}
-        <div id="current-hint" aria-live="polite" aria-atomic="true">
-          <strong>{t.hintKinds[current.kind]} · {current.name}</strong>
-          {current.note && <p>{current.note}</p>}
-          {photo && <figure className="hint-photo">
-            <img src={`${import.meta.env.BASE_URL}hint-photos/${current.photoId}.webp`} alt={photo.alt[language.locale] ?? photo.alt.en}
-              width={photo.width} height={photo.height} loading="lazy" decoding="async" />
-            <figcaption>
-              <a href={photo.source} target="_blank" rel="noreferrer">{photo.title}</a> · {photo.author} ·{' '}
-              <a href={photo.licenseUrl} target="_blank" rel="noreferrer">{photo.license}</a>
-              {current.photoId === 'gagarin' && <> · <a href="https://www.mos.ru/" target="_blank" rel="noreferrer">Mos.ru</a></>}
-            </figcaption>
-          </figure>}
-        </div>
-      </div> : <button type="button" className="reset-button" onClick={() => setIndex(0)}>{t.showHint}</button>}
-    </div>
+    <>
+      <button type="button" className="reset-button hint-toggle" aria-pressed={isOpen} aria-controls="explore-hints"
+        onClick={() => setIsOpen(open => !open)}>{t.showHint}</button>
+      <div id="explore-hints" className="explore-hints hint-card" hidden={!isOpen} role="group" aria-label={t.showHint}>
+        {isOpen && current && <>
+          {hints.length > 1 && <div className="hint-navigation">
+            <button type="button" className="reset-button hint-previous" aria-label={t.previousHint}
+              aria-controls="current-hint" aria-disabled={index === 0} onClick={() => setIndex(position => Math.max(0, position - 1))}>
+              <Icon name="arrow" size={18}/>
+            </button>
+            <span>{index + 1} / {hints.length}</span>
+            <button type="button" className="reset-button hint-next" aria-label={t.nextHint}
+              aria-controls="current-hint" aria-disabled={index === hints.length - 1} onClick={() => setIndex(position => Math.min(hints.length - 1, position + 1))}>
+              <Icon name="arrow" size={18}/>
+            </button>
+          </div>}
+          <div id="current-hint" aria-live="polite" aria-atomic="true">
+            <strong>{t.hintKinds[current.kind]} · {current.name}</strong>
+            {current.note && <p>{current.note}</p>}
+            {photo && <figure className="hint-photo">
+              <img src={`${import.meta.env.BASE_URL}hint-photos/${current.photoId}.webp`} alt={photo.alt[language.locale] ?? photo.alt.en}
+                width={photo.width} height={photo.height} loading="lazy" decoding="async" />
+              <figcaption>
+                <a href={photo.source} target="_blank" rel="noreferrer">{photo.title}</a> · {photo.author} ·{' '}
+                <a href={photo.licenseUrl} target="_blank" rel="noreferrer">{photo.license}</a>
+                {current.photoId === 'gagarin' && <> · <a href="https://www.mos.ru/" target="_blank" rel="noreferrer">Mos.ru</a></>}
+              </figcaption>
+            </figure>}
+          </div>
+        </>}
+      </div>
+    </>
   )
 }
 
@@ -205,7 +212,7 @@ function RegionProgress({ scores }: { scores: RegionScore[] }) {
 }
 
 function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode, autoAdvance, projection, defaultZoom, language, catalog, mode,
-  startedAt, stoppedAt, challenge, onStart, onTimedFinish }: {
+  startedAt, stoppedAt, challenge, storageKey, restored, onStart, onTimedFinish }: {
   world: World; selectedRegions: CountryRegion[]; includeSmall: boolean; includeDisputed: boolean;
   nextMode: NextMode; autoAdvance: boolean; projection: MapProjection; language: LanguagePack; catalog: ReturnType<typeof createCountryCatalog>;
   defaultZoom: number
@@ -213,6 +220,8 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
   startedAt: number | null
   stoppedAt: number | null
   challenge: Challenge | null
+  storageKey: string
+  restored: SavedRound | null
   onStart: () => void
   onTimedFinish: (finishedAt: number) => void
 }) {
@@ -223,13 +232,13 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
   const active = countries.filter(country => selectedRegions.includes(country.region) &&
     (includeSmall || !country.hideWhenSmallOff) && (includeDisputed || !country.disputed))
   const locations = useMemo(() => countryLocations(world, countryGeometry), [world])
-  const [guessed, setGuessed] = useState(new Set<string>())
-  const [selected, setSelected] = useState<string | null>(null)
-  const [history, setHistory] = useState({ entries: [] as string[], index: 0, cycleStart: 0 })
+  const [guessed, setGuessed] = useState(() => new Set(restored?.guessed))
+  const [selected, setSelected] = useState(restored?.selected ?? null)
+  const [history, setHistory] = useState<SelectionHistory>(() => restored?.history ?? { entries: [], index: 0, cycleStart: 0 })
   const [jumpTarget, setJumpTarget] = useState<{ code: string; recenter?: boolean } | null>(null)
-  const [last, setLast] = useState<string | null>(null)
-  const [observedTime, setObservedTime] = useState(startedAt ?? 0)
-  const [lives, setLives] = useState(startingLives)
+  const [last, setLast] = useState(restored?.last ?? null)
+  const [observedTime, setObservedTime] = useState(() => startedAt === null ? 0 : Date.now())
+  const [lives, setLives] = useState(restored?.lives ?? startingLives)
   const resultsDialog = useRef<HTMLDialogElement>(null)
   const [shareStatus, setShareStatus] = useState<'idle' | 'copied' | 'manual'>('idle')
   const shareTextField = useRef<HTMLTextAreaElement>(null)
@@ -284,6 +293,13 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
       guessed: guessedCount, total: active.length, seconds: Math.floor(elapsed / 1000) }),
   ].join('\n') : ''
 
+  useLayoutEffect(() => {
+    saveRound(storageKey, {
+      mode, guessed: [...guessed], selected, history, lives, last, startedAt, stoppedAt,
+      scope: startedAt === null ? null : { selectedRegions, includeSmall, includeDisputed },
+    })
+  }, [storageKey, mode, guessed, selected, history, lives, last, startedAt, stoppedAt, selectedRegions, includeSmall, includeDisputed])
+
   useEffect(() => {
     if (shareStatus !== 'manual') return
     shareTextField.current?.focus()
@@ -331,6 +347,24 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
   function showCountry(code: string) {
     setSelected(code)
     setLast(null)
+  }
+
+  function selectFromMap(code: string, pointerType: string) {
+    if (!canPlay(Date.now())) return
+    function selectOnMap() {
+      setJumpTarget(null)
+      if (!learning) setHistory({ entries: [code], index: 0, cycleStart: 0 })
+      showCountry(code)
+    }
+
+    if (learning || pointerType !== 'touch') {
+      selectOnMap()
+      return
+    }
+
+    // The first tap mounts the input. iOS needs it focused during the touch gesture.
+    flushSync(selectOnMap)
+    document.getElementById('country-name')?.focus({ preventScroll: true })
   }
 
   function select(code: string, restartCycle = false) {
@@ -404,9 +438,11 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
     if (!correct) {
       setLast(null)
       if (timed) setLives(count => Math.max(0, count - 1))
+      if (timed && lives === 1) onTimedFinish(now)
       return
     }
     setGuessed(previous => new Set([...previous, code]))
+    if (timed && remaining.length === 1) onTimedFinish(now)
     if (autoAdvance && remaining.length > 1) advance(remaining.filter(item => item.code !== code))
     else setSelected(null)
     setLast(code)
@@ -414,13 +450,6 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
 
   return (
     <div className={`game-layout${learning ? ' learn-layout' : compactPlay ? ' compact-play' : ''}`}>
-      {learning && <section className="panel learn-search" aria-label={t.countrySearch}>
-        {noRegions ? <p className="play-instruction">{t.selectRegionHint}</p> :
-          <CountryForm key={language.locale} candidates={active} messages={t} normalize={normalize} onFind={item => {
-            showCountry(item.code)
-            setJumpTarget({ code: item.code, recenter: true })
-          }}/>}
-      </section>}
       <section className="panel map-panel" aria-label={t.map}>
         <div className="map-header">
           <h2><Icon name="layers" size={19}/>{noRegions ? t.noRegions : wholeWorld || selectedRegions.length === 1
@@ -428,16 +457,12 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
             : t.selectedRegions}</h2>
         </div>
         <WorldMap key={`${projection}-${mapRegion}`} world={world} region={mapRegion} projection={projection} defaultZoom={defaultZoom} messages={t}
+          storageKey={storageKey}
           active={active} guessed={guessed} selected={selectionDisabled ? null : country?.code ?? null} selectionDisabled={selectionDisabled}
           labelLocations={learning ? locations : undefined}
           selectedLocation={!selectionDisabled && country ? locations.get(country.code) : undefined}
           jumpTarget={!selectionDisabled && country && jumpTarget?.code === country.code ? jumpTarget : null}
-          onSelect={code => {
-            if (!canPlay(Date.now())) return
-            setJumpTarget(null)
-            if (!learning) setHistory({ entries: [code], index: 0, cycleStart: 0 })
-            showCountry(code)
-          }} />
+          onSelect={selectFromMap} />
         {(!learning || active.some(item => item.marker)) && <div className="map-footer">
           <div className="legend" aria-label={t.mapLegend}>
             {!learning && <>
@@ -449,22 +474,18 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
           </div>
         </div>}
       </section>
-      {(!learning || challenge) && <aside className="sidebar">
+      <aside className="sidebar">
         {challenge && <p className="panel challenge-note">
           {t.challengeMessage(challenge.guessed, challenge.total, formatTime(challenge.seconds * 1000))}
         </p>}
-        {!learning && <>
-          <div className="progress-block">
-            <section className="panel progress-panel" aria-label={t.gameProgress}>
-              <h2>{t.overallProgress}</h2>
-              <div className="score"><strong>{guessedCount}</strong><span>{t.countryTotal(active.length)}</span><b>{percent}%</b></div>
-              <progress value={guessedCount} max={active.length || 1} aria-label={t.overallProgress}>{percent}%</progress>
-              {!noRegions && <RegionProgress scores={regionScores} />}
-            </section>
-            {mode === 'explore' && <button className="reset-button progress-reset" type="button" onClick={onStart}>
-              <Icon name="reset" size={17}/>{t.restartExplore}
-            </button>}
-          </div>
+        {learning ? <section className="panel learn-search" aria-label={t.countrySearch}>
+          <h2>{t.countrySearch}</h2>
+          {noRegions ? <p className="play-instruction">{t.selectRegionHint}</p> :
+            <CountryForm key={language.locale} candidates={active} messages={t} normalize={normalize} onFind={item => {
+              showCountry(item.code)
+              setJumpTarget({ code: item.code, recenter: true })
+            }}/>}
+        </section> : <>
           <section className="panel play-panel" aria-label={t.answer}>
             {timed && <div className="round-stats">
               <span>{t.timeLeft} <strong role="timer">{formatTime(Math.ceil(timeLeft / 1000) * 1000)}</strong></span>
@@ -477,7 +498,7 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
                 <p className="play-instruction">{t.roundScore(guessedCount, active.length)}</p>
               </div>
             ) : country ? (
-              <CountryForm key={`${language.locale}-${country.code}`} country={country} candidates={remaining} messages={t} normalize={normalize}
+              <CountryForm key={language.locale} country={country} candidates={remaining} messages={t} normalize={normalize}
                 onAnswer={correct => answer(country.code, correct)}/>
             ) : (
               <>
@@ -500,13 +521,26 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
             {(waitingToStart || showResults) && <button type="button" className="primary-button round-start" onClick={onStart}>
               <Icon name="play" size={17}/>{t.startGame}
             </button>}
-            {playActive && <button type="button" className="next-button" aria-label={t.nextCountry} onClick={selectNext}>
-              <span>{t.nextCountry}</span> <kbd>Tab</kbd><Icon name="arrow" size={19}/>
-            </button>}
-            {mode === 'explore' && country && <ExploreHints key={country.code} code={country.code} language={language}/>}
+            {playActive && <div className="play-actions">
+              <button type="button" className="next-button" aria-label={t.nextCountry} onClick={selectNext}>
+                <span>{t.nextCountry}</span> <kbd>Tab</kbd><Icon name="next" size={19}/>
+              </button>
+              {mode === 'explore' && country && <ExploreHints key={country.code} code={country.code} language={language}/>}
+            </div>}
           </section>
+          <div className="progress-block">
+            <section className="panel progress-panel" aria-label={t.gameProgress}>
+              <h2>{t.overallProgress}</h2>
+              <div className="score"><strong>{guessedCount}</strong><span>{t.countryTotal(active.length)}</span><b>{percent}%</b></div>
+              <progress value={guessedCount} max={active.length || 1} aria-label={t.overallProgress}>{percent}%</progress>
+              {!noRegions && <RegionProgress scores={regionScores} />}
+            </section>
+            {mode === 'explore' && <button className="reset-button progress-reset" type="button" onClick={onStart}>
+              <Icon name="reset" size={17}/>{t.restartExplore}
+            </button>}
+          </div>
         </>}
-      </aside>}
+      </aside>
       {showResults && <dialog ref={resultsDialog} className="settings-dialog results-dialog panel"
         aria-labelledby="results-title" aria-describedby="results-reason results-score">
         <h2 id="results-title">{resultTitle}</h2>
@@ -537,10 +571,17 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
 }
 
 function App({ challenge, invalidChallenge }: { challenge: Challenge | null; invalidChallenge: boolean }) {
-  const [preferences, setPreferences] = useState<GameSettings>(() => {
+  const storageKey = roundStorageKey(challenge)
+  const [initial] = useState(() => {
     const saved = loadSettings()
-    return challenge ? { ...saved, ...challenge.scope, mode: 'timed' } : saved
+    const preferences: GameSettings = challenge ? { ...saved, ...challenge.scope, mode: 'timed' } : saved
+    const restored = loadRound(storageKey, preferences.mode)
+    return {
+      restored,
+      preferences: restored?.scope && restored.stoppedAt === null ? { ...preferences, ...restored.scope } : preferences,
+    }
   })
+  const [preferences, setPreferences] = useState(initial.preferences)
   const { locale, selectedRegions, includeSmall, includeDisputed, nextMode, autoAdvance, projection, mode, defaultZoom } = preferences
   const language = languages.find(item => item.locale === locale) ?? defaultLanguage
   const catalog = useMemo(() => createCountryCatalog(language), [language])
@@ -569,8 +610,9 @@ function App({ challenge, invalidChallenge }: { challenge: Challenge | null; inv
   const settings = useRef<HTMLDialogElement>(null)
   const modeInfo = useRef<HTMLDialogElement>(null)
   const gameMain = useRef<HTMLElement>(null)
-  const [round, setRound] = useState<{ id: number; scope: RoundScope | null; startedAt: number | null; stoppedAt: number | null }>({
-    id: 0, scope: null, startedAt: null, stoppedAt: null,
+  const [round, setRound] = useState<RoundTiming & { id: number }>({
+    id: 0, scope: initial.restored?.scope ?? null,
+    startedAt: initial.restored?.startedAt ?? null, stoppedAt: initial.restored?.stoppedAt ?? null,
   })
   const roundRunning = round.startedAt !== null && round.stoppedAt === null
   const [world, setWorld] = useState<World | null>(null)
@@ -583,6 +625,7 @@ function App({ challenge, invalidChallenge }: { challenge: Challenge | null; inv
   }, [])
 
   function resetRound(startedAt: number | null) {
+    clearRound(storageKey)
     setRound(current => ({ id: current.id + 1, scope: startedAt === null ? null : roundScope(preferences), startedAt, stoppedAt: null }))
   }
 
@@ -653,6 +696,7 @@ function App({ challenge, invalidChallenge }: { challenge: Challenge | null; inv
         {world ? <Game key={round.id} world={world} {...(round.scope ?? roundScope(preferences))}
           mode={mode} nextMode={nextMode} autoAdvance={autoAdvance} projection={projection} defaultZoom={defaultZoom} language={language} catalog={catalog}
           startedAt={round.startedAt} stoppedAt={round.stoppedAt}
+          storageKey={storageKey} restored={round.id === 0 ? initial.restored : null}
           challenge={challenge} onStart={newRound} onTimedFinish={finishTimedRound}/> : (
           <div className="panel loading" role="status">
             {failed ? <>{t.mapError} <button type="button" className="reset-button" onClick={() => { setFailed(false); setRequest(current => current + 1) }}>{t.retry}</button></> : t.loadingMap}
@@ -662,7 +706,13 @@ function App({ challenge, invalidChallenge }: { challenge: Challenge | null; inv
       <dialog className="settings-dialog panel mode-info" id="mode-info" ref={modeInfo}
         aria-labelledby="mode-info-title" aria-describedby="mode-info-description">
         <h2 id="mode-info-title">{modeNames[mode]}</h2>
-        <p id="mode-info-description" className="play-instruction">{t.modeDescriptions[mode]}</p>
+        <div id="mode-info-description">
+          <p className="play-instruction">{t.modeDescriptions[mode]}</p>
+          {mode !== 'learn' && <p className="play-instruction mobile-mode-tip">
+            <Icon name="next" size={19}/><span>{t.mobileNextHelp}</span>
+          </p>}
+          <p className="play-instruction mobile-mode-tip">{t.mobilePortraitHelp}</p>
+        </div>
         <form method="dialog" className="settings-footer">
           <button className="primary-button" type="submit">{t.done}</button>
         </form>

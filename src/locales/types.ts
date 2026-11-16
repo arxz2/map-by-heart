@@ -36,9 +36,12 @@ export type LanguagePack = {
     exploreMode: string
     learnMode: string
     countrySearch: string
+    countrySearchPlaceholder: string
     gameMode: string
     modeInfo: string
     modeDescriptions: Record<'timed' | 'explore' | 'learn', string>
+    mobileNextHelp: string
+    mobilePortraitHelp: string
     timeLeft: string
     lives: string
     roundOver: string

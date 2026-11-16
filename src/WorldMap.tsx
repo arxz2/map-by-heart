@@ -9,6 +9,7 @@ import type { Coordinates } from './country-navigation'
 import { mainPolygon } from './country-navigation'
 import { Icon } from './Icon'
 import { maxZoom } from './settings'
+import { loadMapView, saveMapView } from './round-storage'
 
 export type World = FeatureCollection<Polygon | MultiPolygon, { code: string | null }>
 type Land = Feature<Polygon | MultiPolygon, { code: string | null }>
@@ -22,7 +23,11 @@ const width = 1000
 const height = 570
 const zoomStep = 1.33
 const zoomRangeFactor = zoomStep ** 2
-const mobileMapQuery = '(max-width: 790px)'
+const mobileMapQuery = [
+  '(max-width: 790px)',
+  '(orientation: portrait) and (max-width: 1100px)',
+  '(orientation: portrait) and (any-pointer: coarse) and (max-width: 1440px)',
+].join(', ')
 const globe: View = { x: 0, y: 0, scale: 1 }
 const sphere = { type: 'Sphere' } as const
 const graticule = geoGraticule10()
@@ -244,6 +249,7 @@ type Props = {
   region: Region
   projection: MapProjection
   defaultZoom: number
+  storageKey: string
   messages: LanguagePack['messages']
   selectedLocation?: Coordinates
   labelLocations?: Map<string, Coordinates>
@@ -252,20 +258,26 @@ type Props = {
   selected: string | null
   selectionDisabled: boolean
   jumpTarget: { code: string; recenter?: boolean } | null
-  onSelect: (code: string) => void
+  onSelect: (code: string, pointerType: string) => void
 }
 
-export function WorldMap({ world, region, projection, defaultZoom, messages: t, selectedLocation, labelLocations, active, guessed, selected, selectionDisabled, jumpTarget, onSelect }: Props) {
+export function WorldMap({ world, region, projection, defaultZoom, storageKey, messages: t, selectedLocation, labelLocations, active, guessed, selected, selectionDisabled, jumpTarget, onSelect }: Props) {
   const baseLayout = projection === 'mercator' ? layouts.mercator : region === 'asia-oceania' ? layouts.pacific : layouts.equalEarth
   const showLabels = labelLocations !== undefined
   const [expandedHeight, setExpandedHeight] = useState(height)
   const [mobile, setMobile] = useState(() => window.matchMedia(mobileMapQuery).matches)
-  const viewportHeight = showLabels ? expandedHeight : height
+  const viewportHeight = expandedHeight
   const layout = useMemo(() => ({ ...baseLayout, height: viewportHeight, maxScale: mobile ? maxZoom * zoomRangeFactor : maxZoom }),
     [baseLayout, viewportHeight, mobile])
   const center = useMemo(() => ({ x: width / 2, y: layout.height / 2 }), [layout.height])
   const { project, draw, grid, wrap } = layout
+  const mapLayoutKey = `${projection}:${region}`
   const [view, setView] = useState(() => {
+    const saved = loadMapView(storageKey, mapLayoutKey)
+    if (saved) {
+      const resized = { x: saved.x, y: saved.y + (layout.height - saved.height) / 2, scale: saved.scale }
+      return clampView(zoomAt(resized, 1, center, layout), layout)
+    }
     const home = mapHome(region, layout)
     if (!selectedLocation) return home
     const [x, y] = project(selectedLocation)!
@@ -280,6 +292,7 @@ export function WorldMap({ world, region, projection, defaultZoom, messages: t, 
   const [pixelsPerUnit, setPixelsPerUnit] = useState(1)
   const drag = useRef<Drag | null>(null)
   const pinch = useRef<Pinch | null>(null)
+  const touchSequence = useRef<{ released: Drag | null } | null>(null)
   const activeByCode = new Map(active.map(country => [country.code, country]))
   const tooltipName = tooltip ? activeByCode.get(tooltip.code)?.name : undefined
   const [land] = useState(() => world.features.map(feature => ({
@@ -324,9 +337,23 @@ export function WorldMap({ world, region, projection, defaultZoom, messages: t, 
   const jumpFeature = jumpTarget && land.find(({ feature }) => feature.properties.code === jumpTarget.code)?.feature
   const jumpMarker = jumpTarget ? activeByCode.get(jumpTarget.code)?.marker : undefined
 
+  const persistView = useCallback(() => {
+    saveMapView(storageKey, { ...currentView.current, height: layout.height, layout: mapLayoutKey })
+  }, [storageKey, layout.height, mapLayoutKey])
+
+  useEffect(() => {
+    const timeout = window.setTimeout(persistView, 150)
+    return () => window.clearTimeout(timeout)
+  }, [view, persistView])
+
+  useEffect(() => {
+    window.addEventListener('pagehide', persistView)
+    return () => window.removeEventListener('pagehide', persistView)
+  }, [persistView])
+
   useEffect(() => {
     const element = svg.current
-    if (!showLabels || !element) return
+    if (!element) return
     function measure() {
       const bounds = element?.getBoundingClientRect()
       if (!bounds?.width || !bounds.height) return
@@ -337,7 +364,7 @@ export function WorldMap({ world, region, projection, defaultZoom, messages: t, 
     const observer = new ResizeObserver(measure)
     observer.observe(element)
     return () => observer.disconnect()
-  }, [showLabels])
+  }, [])
 
   const updateView = useCallback((next: View) => {
     currentView.current = next
@@ -522,7 +549,16 @@ export function WorldMap({ world, region, projection, defaultZoom, messages: t, 
     if (gesture?.id !== event.pointerId) return
     drag.current = null
     setDragging(false)
-    if (event.type !== 'pointerup' || gesture.moved ||
+    if (event.type !== 'pointerup') return
+    if (gesture.pointerType === 'touch' && touchSequence.current) {
+      touchSequence.current.released = gesture
+      return
+    }
+    selectTap(gesture, event)
+  }
+
+  function selectTap(gesture: Drag, event: { clientX: number; clientY: number }, touchEnd?: TouchEvent) {
+    if (gesture.moved ||
       Math.hypot(event.clientX - gesture.clientStart.x, event.clientY - gesture.clientStart.y) >= 5) return
     const country = gesture.country
     if (!country) return
@@ -531,12 +567,46 @@ export function WorldMap({ world, region, projection, defaultZoom, messages: t, 
       return
     }
     if (selectionDisabled) return
+    // Stop the compatibility click from moving focus away after the keyboard opens.
+    touchEnd?.preventDefault()
     if (gesture.marker && country.marker && view.scale < 2.6) {
       const [x, y] = project(country.marker)!
       animateView(clampView({ scale: 2.6, x: center.x - x * 2.6, y: center.y - y * 2.6 }, layout))
     }
-    onSelect(country.code)
+    onSelect(country.code, gesture.pointerType)
   }
+
+  const finishTouch = useEffectEvent((event: TouchEvent) => {
+    const sequence = touchSequence.current
+    touchSequence.current = null
+    if (!sequence || pinch.current || event.touches.length || event.changedTouches.length !== 1) return
+    const gesture = sequence.released ?? drag.current
+    if (gesture?.pointerType !== 'touch') return
+    drag.current = null
+    setDragging(false)
+    // Focus the answer from the native touchend event, where Safari can open the keyboard.
+    selectTap(gesture, event.changedTouches[0], event)
+  })
+
+  useEffect(() => {
+    const element = svg.current
+    if (!element) return
+    function startTouch() {
+      touchSequence.current = { released: null }
+    }
+    function cancelTouch() {
+      touchSequence.current = null
+    }
+    element.addEventListener('touchstart', startTouch, { passive: true })
+    element.addEventListener('touchend', finishTouch, { passive: false })
+    element.addEventListener('touchcancel', cancelTouch)
+    return () => {
+      element.removeEventListener('touchstart', startTouch)
+      element.removeEventListener('touchend', finishTouch)
+      element.removeEventListener('touchcancel', cancelTouch)
+      cancelTouch()
+    }
+  }, [])
 
   function showTooltip(event: PointerEvent<SVGElement>, country: Country) {
     if (event.pointerType !== 'mouse' || (!showLabels && !guessed.has(country.code)) ||

@@ -22,7 +22,7 @@ A timed round ends when time or lives run out, all entries are guessed, or you p
 
 **Auto-select next country** is off by default. Turn it on to advance after each correct answer using the same country selection order as Tab.
 
-By default, the game opens in English with all regions selected, small countries and disputed territories excluded, **Nearby** navigation, and the Mercator projection. Settings are saved in the browser. Reloading the page resets round progress. Changing language during a round preserves the score, map view, selected country, and navigation history, and clears the current answer field.
+By default, the game opens in English with all regions selected, small countries and disputed territories excluded, **Nearby** navigation, and the Mercator projection. Settings and round progress are saved in the browser. Reloading restores the score, lives, selected country, navigation history, and map view. The timed round continues counting down while the page is closed, and the result appears on return if time ran out. Starting a new round clears earlier progress. Changing language during a round preserves progress and clears the current answer field.
 
 - **World** selects all regions. Overall and regional progress reflect the entries currently included in the round.
 - Drag to pan and scroll to zoom. The **+** and **−** buttons multiply or divide the scale by **1.33**. Small countries and some archipelagos have clickable markers.

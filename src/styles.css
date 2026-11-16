@@ -126,9 +126,9 @@ h1, h2, p { margin: 0; }
 .legend-marker { width: 8px; height: 8px; margin-inline: 1.5px; border-radius: 50%; background: var(--available-marker); }
 .sidebar { display: grid; gap: 13px; }
 .challenge-note { grid-column: 1 / -1; padding: 12px 17px; background: var(--wash); color: var(--accent-dark); font-size: 13px; font-weight: 650; line-height: 1.45; }
-.progress-panel, .play-panel { padding: 17px; }
+.progress-panel, .play-panel, .learn-search { padding: 17px; }
 .progress-reset { margin-top: 8px; }
-.explore-hints { margin-top: 8px; }
+.explore-hints { grid-column: 1 / -1; min-width: 0; }
 .explore-hints button[aria-disabled="true"] { cursor: default; color: var(--muted); background: var(--paper); }
 .hint-card { padding: 8px 10px; border-radius: 8px; background: var(--wash); font-size: 13px; }
 .hint-card p { margin-top: 3px; color: var(--muted); line-height: 1.4; }
@@ -142,22 +142,21 @@ h1, h2, p { margin: 0; }
 .hint-photo figcaption { margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.4; overflow-wrap: anywhere; }
 .hint-photo a { color: var(--accent-dark); }
 .mode-info .play-instruction { margin: 0 0 16px; }
+.mobile-mode-tip { display: none; }
 #root:has(.learn-layout) { display: flex; flex-direction: column; height: 100dvh; }
 #root:has(.learn-layout) > .topbar { flex-shrink: 0; }
 .game-main:has(.learn-layout) { flex: 1; min-height: 0; padding-top: 8px; }
 .game-layout.learn-layout {
   height: 100%;
-  grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: auto minmax(220px, 1fr);
+  grid-template-rows: minmax(220px, 1fr);
   align-items: stretch;
-  gap: 8px;
   padding-bottom: 8px;
 }
+.learn-layout .sidebar { align-self: start; }
 .learn-layout .map-panel { max-height: none; }
 .learn-layout .map-stage { flex: 1; aspect-ratio: auto; }
-.learn-search { padding: 8px 10px; }
+.learn-search h2 { margin-bottom: 12px; }
 .learn-search .answer-form label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.learn-search .answer-entry input { min-height: 44px; font-size: 16px; }
 .round-stats { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; margin-bottom: 12px; padding-bottom: 9px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 13px; }
 .round-stats strong { margin-inline-start: 4px; color: var(--ink); font-variant-numeric: tabular-nums; }
 .world-map.selection-disabled .available { cursor: inherit; }
@@ -183,9 +182,14 @@ progress { display: block; border: none; width: 100%; height: 7px; border-radius
 progress::-webkit-progress-bar { background: var(--wash); }
 progress::-webkit-progress-value { background: var(--accent); border-radius: 10px; }
 progress::-moz-progress-bar { background: var(--accent); border-radius: 10px; }
-.play-panel h2 { font-size: 19px; font-weight: 760; letter-spacing: -.033em; line-height: 1.25; }
+.play-panel h2, .learn-search h2 { font-size: 19px; font-weight: 760; letter-spacing: -.033em; line-height: 1.25; }
 .play-instruction { margin-top: 7px; font-size: 13px; line-height: 1.55; color: var(--muted); }
-.next-button { display: inline-flex; align-items: center; gap: 7px; margin-top: 12px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--accent-dark); font-size: 12px; font-weight: 650; }
+.play-actions { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-top: 12px; }
+.play-actions > .next-button { justify-self: start; }
+.play-actions > .hint-toggle { justify-self: end; padding: 6px 8px; font-size: 12px; }
+.play-actions .hint-toggle[aria-pressed="true"] { border-color: var(--accent); background: var(--accent); color: var(--surface); }
+.play-actions > button { text-align: start; }
+.next-button { display: inline-flex; align-items: center; gap: 7px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--accent-dark); font-size: 12px; font-weight: 650; }
 .next-button:hover:not(:disabled) { background: var(--wash); }
 .next-button:disabled { color: var(--muted); background: var(--paper); }
 .next-button kbd { padding: 1px 4px; border: 1px solid var(--line); border-radius: 3px; color: var(--muted); background: var(--paper); font: inherit; font-size: 10px; }
@@ -216,7 +220,10 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 10px; }
   .page-width { width: calc(100% - 48px); }
   .game-layout { grid-template-columns: minmax(0, 1fr) 252px; gap: 13px; }
 }
-@media (max-width: 790px) {
+@media (max-width: 790px),
+       (pointer: coarse) and (max-width: 1440px),
+       (orientation: portrait) and (max-width: 1100px),
+       (orientation: portrait) and (any-pointer: coarse) and (max-width: 1440px) {
   .topbar-inner { min-height: 56px; gap: 8px; }
   .topbar .brand { gap: 6px; font-size: 16px; white-space: nowrap; }
   .topbar .brand-icon { width: 30px; height: 30px; }
@@ -224,12 +231,22 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 10px; }
   .topbar-button, .topbar-mode { display: grid; place-items: center; width: 44px; height: 44px; }
   .topbar-button { padding: 0; }
   .topbar-button span, .topbar-mode:has(.mode-select:disabled) { display: none; }
+  .mobile-mode-tip { display: flex; align-items: flex-start; gap: 8px; }
+  .mobile-mode-tip svg { flex-shrink: 0; }
   .topbar-mode { position: relative; border: 1px solid var(--line); border-radius: 9px; }
   .topbar-mode:focus-within { outline: 3px solid var(--accent); outline-offset: 3px; }
   .topbar-mode .mode-select { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; opacity: 0; }
   .mode-symbol { display: flex; align-items: center; gap: 4px; }
   .mode-symbol::after { content: ''; width: 4px; height: 4px; border: solid currentColor; border-width: 0 1px 1px 0; transform: rotate(45deg); }
   .game-layout { grid-template-columns: minmax(0, 1fr); }
+  .game-layout.learn-layout { grid-template-rows: auto minmax(220px, 1fr); gap: 8px; }
+  .learn-layout .sidebar { display: contents; }
+  .learn-search { order: -1; padding: 8px 10px; }
+  .learn-search h2 { display: none; }
+  .learn-search .answer-entry input { min-height: 44px; font-size: 16px; }
+  .map-header { min-height: 0; padding: 6px 10px; }
+  .map-header h2 { gap: 6px; font-size: 13px; }
+  .map-header h2 svg { width: 16px; height: 16px; }
   .map-footer { display: none; }
   .sidebar { grid-template-columns: 1fr 1fr; align-items: start; }
   .compact-play { gap: 8px; }
@@ -250,12 +267,25 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 10px; }
   .compact-play .answer-form { grid-area: 1 / 1; gap: 4px; }
   .compact-play .answer-entry input { min-height: 44px; font-size: 16px; }
   .compact-play .answer-preview input:disabled { opacity: 1; background: var(--paper); }
+  .compact-play .play-actions { display: contents; }
   .compact-play .next-button { grid-area: 1 / 2; display: grid; place-items: center; width: 44px; height: 44px; margin: 0; }
   .compact-play .play-panel > .last-answer { grid-column: 1 / -1; margin-top: 0; }
   .compact-play .progress-block, .compact-play .round-result-summary { grid-column: 1 / -1; }
   .compact-play .round-result-summary { grid-row: 1; }
-  .compact-play .explore-hints { grid-column: 1 / -1; margin-top: 0; }
+  .compact-play .hint-toggle, .compact-play .explore-hints { grid-column: 1 / -1; }
+  .compact-play .hint-toggle { justify-self: start; }
   .hint-photo img { max-height: 160px; }
+}
+@media (orientation: portrait) and (max-width: 790px),
+       (orientation: portrait) and (pointer: coarse) and (max-width: 1440px) {
+  .game-layout:not(.learn-layout) .map-stage { max-height: 260px; }
+}
+@media (orientation: portrait) and (min-width: 700px) and (max-width: 1100px),
+       (orientation: portrait) and (any-pointer: coarse) and (min-width: 700px) and (max-width: 1440px) {
+  .game-main { width: 100%; padding-inline: 8px; }
+  .map-panel { width: 100%; }
+  .map-stage { width: 100%; }
+  .game-layout:not(.learn-layout) .map-stage { height: clamp(320px, 34dvh, 380px); max-height: none; aspect-ratio: auto; }
 }
 @media (max-width: 490px) {
   .page-width { width: calc(100% - 28px); }
