@@ -27,7 +27,7 @@ const defaults: GameSettings = {
   locale: defaultLanguage.locale,
   selectedRegions: allRegions,
   includeSmall: false,
-  includeDisputed: false,
+  includeDisputed: true,
   nextMode: 'nearby',
   projection: 'mercator',
   defaultZoom: 6,
