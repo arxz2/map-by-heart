@@ -128,14 +128,15 @@ function wrapCountryLabel(name: string) {
   return [...lines, line]
 }
 
-function visibleCountryLabels(
+function placeCountryLabels(
   countries: Country[], locations: Map<string, Coordinates>, project: Layout['project'],
-  view: View, copies: number, selected: string | null, geometry: Map<string, LabelGeometry>, fontSize: number, viewportHeight: number,
+  scale: number, wrap: boolean, selected: string | null, geometry: Map<string, LabelGeometry>, fontSize: number,
 ) {
   const labels: { key: string; lines: string[]; x: number; y: number; anchorY: number;
     halfWidth: number; halfHeight: number }[] = []
-  const offsets = view.scale >= 12 ? labelOffsets : labelOffsets.slice(0, view.scale >= 3 ? 5 : 1)
-  const areaOrder = view.scale >= 12 ? 1 : -1
+  const offsets = scale >= 12 ? labelOffsets : labelOffsets.slice(0, scale >= 3 ? 5 : 1)
+  const areaOrder = scale >= 12 ? 1 : -1
+  const period = width * scale
   const ordered = [...countries].sort((a, b) => Number(b.code === selected) - Number(a.code === selected) ||
     areaOrder * ((geometry.get(a.code)?.area ?? 0) - (geometry.get(b.code)?.area ?? 0)))
   for (const country of ordered) {
@@ -145,29 +146,31 @@ function visibleCountryLabels(
     if (!point || !point.every(Number.isFinite) || !outline) continue
     const lines = wrapCountryLabel(country.name)
     const halfHeight = lines.length * fontSize * labelLineHeight / 2
-    const minY = view.y + outline.top * view.scale
-    const maxY = view.y + outline.bottom * view.scale
-    const anchorY = view.y + point[1] * view.scale
+    const minY = outline.top * scale
+    const maxY = outline.bottom * scale
+    const x = point[0] * scale
+    const anchorY = point[1] * scale
     const preferredY = anchorY - (country.marker ? halfHeight + fontSize / 2 : 0)
-    if (preferredY < minY || preferredY > maxY) continue
     const halfWidth = (Math.max(...lines.map(line => [...line].length)) * .34 + .35) * fontSize
-    for (let copy = 0; copy < copies; copy++) {
-      const x = view.x + (point[0] + copy * width) * view.scale
-      for (const offset of offsets) {
-        const y = preferredY + offset * (halfHeight + fontSize * .7)
-        if (y < minY || y > maxY || labels.some(label =>
-          Math.abs(label.y - y) < label.halfHeight + halfHeight + fontSize * .15 &&
-          Math.abs(label.x - x) < label.halfWidth + halfWidth)) continue
-        labels.push({ key: `${country.code}-${copy}`, lines, x, y, anchorY, halfWidth, halfHeight })
-        break
-      }
+    const positions = [
+      { y: preferredY, shifted: false },
+      ...(country.marker ? [{ y: anchorY + halfHeight + fontSize / 2, shifted: false }] : []),
+      ...offsets.slice(1).map(offset => ({ y: preferredY + offset * (halfHeight + fontSize * .7), shifted: true })),
+    ]
+    for (const { y, shifted } of positions) {
+      if (shifted && (y < minY || y > maxY)) continue
+      const overlaps = labels.some(label => {
+        if (Math.abs(label.y - y) >= label.halfHeight + halfHeight + fontSize * .15) return false
+        const dx = label.x - x
+        const distance = Math.abs(wrap ? dx - Math.round(dx / period) * period : dx)
+        return distance < label.halfWidth + halfWidth
+      })
+      if (overlaps) continue
+      labels.push({ key: country.code, lines, x, y, anchorY, halfWidth, halfHeight })
+      break
     }
   }
-  // Clip only after placement so panning past an edge cannot trigger a label move.
-  return labels.filter(({ x, y, halfWidth, halfHeight }) => {
-    const labelExtent = halfHeight + fontSize / 8
-    return x + halfWidth > 0 && x - halfWidth < width && y + labelExtent > 0 && y - labelExtent < viewportHeight
-  })
+  return labels
 }
 
 function revealOffset(start: number, end: number, extent: number, padding: number, focus: number, recenter: boolean) {
@@ -298,7 +301,26 @@ export function WorldMap({ world, region, projection, defaultZoom, messages: t, 
     return geometry
   }, [showLabels, world, draw])
   const labelFontSize = 12 / pixelsPerUnit
-  const labels = labelLocations ? visibleCountryLabels(active, labelLocations, project, view, copies, selected, labelGeometry, labelFontSize, layout.height) : []
+  const { scale } = view
+  const placedLabels = useMemo(() => labelLocations
+    ? placeCountryLabels(active, labelLocations, project, scale, wrap, selected, labelGeometry, labelFontSize)
+    : [], [active, labelLocations, project, scale, wrap, selected, labelGeometry, labelFontSize])
+  // Panning only moves the layer and clips labels at the viewport edges.
+  const labels = placedLabels.flatMap(label => {
+    const screenY = label.y + view.y
+    const extent = label.halfHeight + labelFontSize / 8
+    if (screenY + extent <= 0 || screenY - extent >= layout.height) return []
+    const visibleCopies = []
+    // Labels can extend past the edge of a map copy.
+    for (let copy = wrap ? -1 : 0; copy < (wrap ? copies + 1 : 1); copy++) {
+      const x = label.x + copy * width * scale
+      const screenX = x + view.x
+      if (screenX + label.halfWidth > 0 && screenX - label.halfWidth < width) {
+        visibleCopies.push({ ...label, key: `${label.key}-${copy}`, x })
+      }
+    }
+    return visibleCopies
+  })
   const jumpFeature = jumpTarget && land.find(({ feature }) => feature.properties.code === jumpTarget.code)?.feature
   const jumpMarker = jumpTarget ? activeByCode.get(jumpTarget.code)?.marker : undefined
 
@@ -577,7 +599,8 @@ export function WorldMap({ world, region, projection, defaultZoom, messages: t, 
             )
           })}
         </g>)}
-        {showLabels && <g className="country-labels" aria-hidden="true" fontSize={labelFontSize} strokeWidth={labelFontSize / 4}>
+        {showLabels && <g className="country-labels" aria-hidden="true" fontSize={labelFontSize} strokeWidth={labelFontSize / 4}
+          transform={`translate(${view.x} ${view.y})`}>
           {labels.map(({ key, x, y, anchorY, halfHeight }) => {
             const dy = anchorY - y
             if (Math.abs(dy) - halfHeight <= labelFontSize * 1.2) return null
