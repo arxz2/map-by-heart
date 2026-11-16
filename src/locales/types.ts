@@ -50,6 +50,7 @@ export type LanguagePack = {
     smallCountries: string
     disputedTerritories: string
     nextMode: string
+    autoAdvance: string
     random: string
     nearby: string
     projection: string

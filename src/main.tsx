@@ -189,10 +189,10 @@ function RegionProgress({ scores }: { scores: RegionScore[] }) {
   )
 }
 
-function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode, projection, defaultZoom, language, catalog, mode,
+function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode, autoAdvance, projection, defaultZoom, language, catalog, mode,
   startedAt, stoppedAt, challenge, onStart, onTimedFinish }: {
   world: World; selectedRegions: CountryRegion[]; includeSmall: boolean; includeDisputed: boolean;
-  nextMode: NextMode; projection: MapProjection; language: LanguagePack; catalog: ReturnType<typeof createCountryCatalog>;
+  nextMode: NextMode; autoAdvance: boolean; projection: MapProjection; language: LanguagePack; catalog: ReturnType<typeof createCountryCatalog>;
   defaultZoom: number
   mode: GameSettings['mode']
   startedAt: number | null
@@ -226,8 +226,6 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
     Math.min(history.index + selectionHistorySize, history.entries.length - history.cycleStart))
   const canRevisit = (code: string) => code !== lastSelected && remaining.some(item => item.code === code)
   const previousIndex = history.entries.findIndex((code, index) => index > history.index && canRevisit(code))
-  const forwardOffset = history.entries.slice(0, history.index).reverse().findIndex(canRevisit)
-  const forwardIndex = forwardOffset < 0 ? -1 : history.index - 1 - forwardOffset
   const done = remaining.length === 0
   const timed = mode === 'timed'
   const learning = mode === 'learn'
@@ -340,25 +338,31 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
     showCountry(code)
   }
 
-  function selectNext() {
-    if (!canPlay(Date.now())) return
-    if (remaining.length === 1) {
-      const { code } = remaining[0]
+  function advance(candidates: Country[]) {
+    if (candidates.length === 1) {
+      const { code } = candidates[0]
       setJumpTarget({ code, recenter: true })
       select(code)
       document.getElementById('country-name')?.focus({ preventScroll: true })
       return
     }
-    if (forwardIndex >= 0) {
-      revisit(forwardIndex)
-      return
+    for (let index = history.index - 1; index >= 0; index--) {
+      const code = history.entries[index]
+      if (code !== lastSelected && candidates.some(item => item.code === code)) {
+        revisit(index)
+        return
+      }
     }
     const anchor = active.some(item => item.code === lastSelected) ? lastSelected : null
-    const nextInCycle = nextCountry(remaining, anchor, nextMode, locations, recentSelections)
-    const next = nextInCycle ?? nextCountry(remaining, anchor, nextMode, locations, [])
+    const nextInCycle = nextCountry(candidates, anchor, nextMode, locations, recentSelections)
+    const next = nextInCycle ?? nextCountry(candidates, anchor, nextMode, locations, [])
     if (!next) return
     setJumpTarget({ code: next.code })
     select(next.code, !nextInCycle)
+  }
+
+  function selectNext() {
+    if (canPlay(Date.now())) advance(remaining)
   }
 
   useEffect(() => {
@@ -387,7 +391,8 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
       return
     }
     setGuessed(previous => new Set([...previous, code]))
-    setSelected(null)
+    if (autoAdvance && remaining.length > 1) advance(remaining.filter(item => item.code !== code))
+    else setSelected(null)
     setLast(code)
   }
 
@@ -473,6 +478,9 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
                 </div>}
               </>
             )}
+            {!showResults && country && lastAnswer && <p className="last-answer" role="status">
+              <Icon name="check" size={17}/>{t.correct(lastAnswer.name)}
+            </p>}
             {(waitingToStart || showResults) && <button type="button" className="primary-button round-start" onClick={onStart}>
               <Icon name="play" size={17}/>{t.startGame}
             </button>}
@@ -517,7 +525,7 @@ function App({ challenge, invalidChallenge }: { challenge: Challenge | null; inv
     const saved = loadSettings()
     return challenge ? { ...saved, ...challenge.scope, mode: 'timed' } : saved
   })
-  const { locale, selectedRegions, includeSmall, includeDisputed, nextMode, projection, mode, defaultZoom } = preferences
+  const { locale, selectedRegions, includeSmall, includeDisputed, nextMode, autoAdvance, projection, mode, defaultZoom } = preferences
   const language = languages.find(item => item.locale === locale) ?? defaultLanguage
   const catalog = useMemo(() => createCountryCatalog(language), [language])
   const { messages: t } = language
@@ -627,7 +635,7 @@ function App({ challenge, invalidChallenge }: { challenge: Challenge | null; inv
       <main id="game-main" ref={gameMain} tabIndex={-1} className="page-width game-main">
         {invalidChallenge && <p className="panel challenge-note" role="status">{t.invalidChallengeLink}</p>}
         {world ? <Game key={round.id} world={world} {...(round.scope ?? roundScope(preferences))}
-          mode={mode} nextMode={nextMode} projection={projection} defaultZoom={defaultZoom} language={language} catalog={catalog}
+          mode={mode} nextMode={nextMode} autoAdvance={autoAdvance} projection={projection} defaultZoom={defaultZoom} language={language} catalog={catalog}
           startedAt={round.startedAt} stoppedAt={round.stoppedAt}
           challenge={challenge} onStart={newRound} onTimedFinish={finishTimedRound}/> : (
           <div className="panel loading" role="status">
@@ -678,6 +686,8 @@ function App({ challenge, invalidChallenge }: { challenge: Challenge | null; inv
             disabled={roundRunning} onChange={event => updateSettings({ includeSmall: event.target.checked })} /></label>
           <label className="small-option">{t.disputedTerritories}<input type="checkbox" role="switch" checked={includeDisputed}
             disabled={roundRunning} onChange={event => updateSettings({ includeDisputed: event.target.checked })} /></label>
+          <label className="small-option">{t.autoAdvance}<input type="checkbox" role="switch" checked={autoAdvance}
+            onChange={event => updateSettings({ autoAdvance: event.target.checked })} /></label>
           <label className="next-option">{t.nextMode}
             <select value={nextMode} onChange={event => updateSettings({ nextMode: event.target.value as NextMode })}>
               <option value="random">{t.random}</option>

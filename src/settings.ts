@@ -16,6 +16,7 @@ export type GameSettings = {
   includeSmall: boolean
   includeDisputed: boolean
   nextMode: NextMode
+  autoAdvance: boolean
   projection: MapProjection
   defaultZoom: number
 }
@@ -29,6 +30,7 @@ const defaults: GameSettings = {
   includeSmall: false,
   includeDisputed: true,
   nextMode: 'nearby',
+  autoAdvance: false,
   projection: 'mercator',
   defaultZoom: 6,
 }
@@ -51,6 +53,7 @@ export function loadSettings(): GameSettings {
       includeSmall: typeof saved?.includeSmall === 'boolean' ? saved.includeSmall : defaults.includeSmall,
       includeDisputed: typeof saved?.includeDisputed === 'boolean' ? saved.includeDisputed : defaults.includeDisputed,
       nextMode: saved?.nextMode === 'random' || saved?.nextMode === 'nearby' ? saved.nextMode : defaults.nextMode,
+      autoAdvance: saved?.autoAdvance === true,
       projection: saved?.projection === 'equal-earth' || saved?.projection === 'mercator' ? saved.projection : defaults.projection,
       defaultZoom: typeof saved?.defaultZoom === 'number' && saved.defaultZoom >= minDefaultZoom && saved.defaultZoom <= maxZoom
         ? saved.defaultZoom : defaults.defaultZoom,

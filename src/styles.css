@@ -56,8 +56,8 @@ h1, h2, p { margin: 0; }
 .region-checkboxes { display: grid; gap: 8px; margin-top: 11px; font-size: 13px; }
 .region-checkboxes label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
 .region-checkboxes input { margin: 0; width: 16px; height: 16px; accent-color: var(--accent); flex-shrink: 0; }
-.game-options { display: grid; gap: 11px; margin-block: 16px; color: var(--muted); font-size: 13px; font-weight: 600; }
-.small-option, .next-option { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.game-options { display: grid; grid-auto-rows: 1fr; gap: 5px; margin-block: 16px; color: var(--muted); font-size: 13px; font-weight: 600; }
+.small-option, .next-option { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 32px; }
 .settings-footer { display: flex; justify-content: flex-end; padding-top: 12px; border-top: 1px solid var(--line); }
 .results-dialog h2 { margin-bottom: 4px; }
 .results-score { margin-top: 16px; padding: 14px; border-radius: 10px; background: var(--wash); color: var(--accent-dark); font-size: 20px; font-weight: 750; }
@@ -74,7 +74,7 @@ h1, h2, p { margin: 0; }
 .results-stats dt { color: var(--muted); font-size: 12px; }
 .results-stats dd { margin: 4px 0 0; color: var(--ink); font-size: 18px; font-weight: 720; font-variant-numeric: tabular-nums; }
 .small-option { cursor: pointer; }
-.small-option input { appearance: none; position: relative; display: inline-block; width: 32px; height: 18px; margin: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--line); cursor: pointer; }
+.small-option input { appearance: none; position: relative; display: inline-block; width: 32px; height: 18px; flex-shrink: 0; margin: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--line); cursor: pointer; }
 .small-option input::after { content: ''; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); }
 .small-option input:checked { background: var(--accent); border-color: var(--accent); }
 .small-option input:checked::after { transform: translateX(14px); }
@@ -243,10 +243,11 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 10px; }
   .compact-play .answer-form label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .compact-play .answer-preview { display: grid; }
   .compact-play .next-button svg { display: block; }
-  .compact-play .answer-form { gap: 4px; }
+  .compact-play .answer-form { grid-area: 1 / 1; gap: 4px; }
   .compact-play .answer-entry input { min-height: 44px; font-size: 16px; }
   .compact-play .answer-preview input:disabled { opacity: 1; background: var(--paper); }
-  .compact-play .next-button { display: grid; place-items: center; width: 44px; height: 44px; margin: 0; }
+  .compact-play .next-button { grid-area: 1 / 2; display: grid; place-items: center; width: 44px; height: 44px; margin: 0; }
+  .compact-play .play-panel > .last-answer { grid-column: 1 / -1; margin-top: 0; }
   .compact-play .progress-block, .compact-play .round-result-summary { grid-column: 1 / -1; }
   .compact-play .round-result-summary { grid-row: 1; }
   .compact-play .explore-hints { grid-column: 1 / -1; margin-top: 0; }
