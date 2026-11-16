@@ -10,6 +10,9 @@
   --accent-dark: #344d3a;
   --land: #ecdfca;
   --land-marker: #b79971;
+  --land-hover: color-mix(in srgb, var(--land), var(--land-marker) 42%);
+  --marker-brightness: 85%;
+  --available-marker: color-mix(in srgb, var(--land) var(--marker-brightness), black);
   --selected: #e8ad58;
   --guessed: #8eae88;
   --error: #923f34;
@@ -96,14 +99,15 @@ h1, h2, p { margin: 0; }
 .country-label-leader { stroke: var(--muted); stroke-width: 1; vector-effect: non-scaling-stroke; }
 .country { stroke: var(--surface); stroke-width: .75; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
 .country.outside { fill: var(--outside); stroke: var(--surface); }
-.country.available { fill: var(--land); cursor: pointer; }
-.country.selected { fill: var(--selected); cursor: pointer; }
-.country.guessed { fill: var(--guessed); cursor: help; }
-.micro-marker { cursor: pointer; }
-.micro-marker.guessed { cursor: help; }
-.marker-dot { fill: var(--land-marker); stroke: var(--surface); stroke-width: 1.3; }
-.micro-marker.selected .marker-dot { fill: var(--selected); }
-.micro-marker.guessed .marker-dot { fill: var(--accent); }
+.country.available { fill: var(--land); }
+.micro-marker.available .marker-dot { fill: var(--available-marker); }
+.country.selected, .micro-marker.selected .marker-dot { fill: var(--selected); }
+.micro-marker.selected .marker-dot { r: 6px; }
+.country.guessed { fill: var(--guessed); }
+.micro-marker.guessed .marker-dot { fill: color-mix(in srgb, var(--guessed) var(--marker-brightness), black); }
+.country.available, .country.selected, .micro-marker { cursor: pointer; }
+.country.guessed, .micro-marker.guessed { cursor: help; }
+.marker-dot { stroke: var(--surface); stroke-width: 1.3; }
 .map-controls { display: flex; flex-direction: column; position: absolute; top: 12px; right: 12px; overflow: hidden; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); box-shadow: 0 3px 12px var(--shadow); }
 .map-controls button { width: 34px; height: 34px; border: none; background: var(--surface); color: var(--ink); display: grid; place-items: center; }
 .map-controls button + button { border-top: 1px solid var(--line); }
@@ -119,7 +123,7 @@ h1, h2, p { margin: 0; }
 .legend-dot.available { background: var(--land); }
 .legend-dot.selected { background: var(--selected); }
 .legend-dot.guessed { background: var(--guessed); }
-.legend-marker { width: 8px; height: 8px; margin-inline: 1.5px; border-radius: 50%; background: var(--land-marker); }
+.legend-marker { width: 8px; height: 8px; margin-inline: 1.5px; border-radius: 50%; background: var(--available-marker); }
 .sidebar { display: grid; gap: 13px; }
 .challenge-note { grid-column: 1 / -1; padding: 12px 17px; background: var(--wash); color: var(--accent-dark); font-size: 13px; font-weight: 650; line-height: 1.45; }
 .progress-panel, .play-panel { padding: 17px; }
@@ -159,11 +163,11 @@ h1, h2, p { margin: 0; }
 .world-map.selection-disabled .available { cursor: inherit; }
 @media (hover: hover) and (pointer: fine) {
   .world-map:not(.selection-disabled, .dragging) .country.available:hover {
-    fill: color-mix(in srgb, var(--land), var(--land-marker) 42%);
+    fill: var(--land-hover);
   }
   .world-map:not(.selection-disabled, .dragging) .micro-marker.available:hover .marker-dot {
-    r: 5px;
-    fill: color-mix(in srgb, var(--land-marker), var(--ink) 24%);
+    fill: color-mix(in srgb, var(--land-hover) var(--marker-brightness), black);
+    r: 6px;
   }
 }
 .progress-panel h2 { font-size: 14px; font-weight: 720; }

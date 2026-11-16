@@ -40,6 +40,8 @@ npm.cmd run dev
 
 Open [http://127.0.0.1:5173/](http://127.0.0.1:5173/) or the address Vite prints. Press Ctrl+C to stop it. Dependency installation requires an internet connection. During play the map, fonts, and code are served locally.
 
+To open the game from another device on the same network, run `npm.cmd run lan` and use the **Network** address printed by Vite. This uses port 5174 and reports an error if it is already occupied.
+
 ### Build and preview
 
 ```powershell

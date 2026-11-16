@@ -402,6 +402,7 @@ function Game({ world, selectedRegions, includeSmall, includeDisputed, nextMode,
     if (!canPlay(now)) return
     if (timed) setObservedTime(now)
     if (!correct) {
+      setLast(null)
       if (timed) setLives(count => Math.max(0, count - 1))
       return
     }

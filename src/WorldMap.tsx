@@ -610,7 +610,7 @@ export function WorldMap({ world, region, projection, defaultZoom, messages: t, 
               <g key={country.code} className={`micro-marker ${state}`} data-marker={country.code}
                 transform={`translate(${x} ${y}) scale(${1 / view.scale})`} {...tooltipEvents(country)}>
                 <circle r="7.5" fill="transparent" />
-                <circle r="4" className="marker-dot" />
+                <circle r="5" className="marker-dot" />
               </g>
             )
           })}
