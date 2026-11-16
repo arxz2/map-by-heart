@@ -204,8 +204,8 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 10px; }
 .primary-button.round-start { grid-column: 1 / -1; justify-content: center; gap: 8px; width: 100%; min-height: 44px; }
 .round-result-summary + .round-start { margin-top: 8px; }
 .suggestions { list-style: none; position: absolute; z-index: 2; top: calc(100% + 4px); width: 100%; padding: 4px; margin: 0; border: 1px solid var(--line); background: var(--surface); border-radius: 9px; box-shadow: 0 7px 20px var(--shadow); }
-.suggestions li { padding: 7px 8px; border-radius: 5px; cursor: pointer; font-size: 13px; }
-.suggestions li:hover, .suggestions li[aria-selected="true"] { color: var(--accent-dark); background: var(--wash); }
+.suggestions button { display: block; width: 100%; text-align: start; color: inherit; background: transparent; border: 0; border-radius: 5px; padding: 7px 8px; font-size: 13px; }
+.suggestions button:hover, .suggestions button[aria-selected="true"] { color: var(--accent-dark); background: var(--wash); }
 .loading { padding: 22px; color: var(--muted); }
 
 @media (max-width: 1080px) {

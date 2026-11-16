@@ -40,6 +40,7 @@ function CountryForm(props: CountryFormProps) {
   const { candidates, messages: t, normalize } = props
   const searching = 'onFind' in props
   const input = useRef<HTMLInputElement>(null)
+  const answerEntry = useRef<HTMLDivElement>(null)
   const [value, setValue] = useState('')
   const [open, setOpen] = useState(false)
   const [highlighted, setHighlighted] = useState(-1)
@@ -52,6 +53,15 @@ function CountryForm(props: CountryFormProps) {
   useEffect(() => {
     if (!searching && !document.querySelector('dialog[open]')) input.current?.focus({ preventScroll: true })
   }, [searching])
+
+  useEffect(() => {
+    if (!expanded) return
+    function dismissOnOutsidePress(event: PointerEvent) {
+      if (event.target instanceof Node && !answerEntry.current?.contains(event.target)) setOpen(false)
+    }
+    document.addEventListener('pointerdown', dismissOnOutsidePress, true)
+    return () => document.removeEventListener('pointerdown', dismissOnOutsidePress, true)
+  }, [expanded])
 
   function submitAnswer(answer: string, suggestion?: Country) {
     const normalized = normalize(answer)
@@ -104,7 +114,10 @@ function CountryForm(props: CountryFormProps) {
   return (
     <form className="answer-form" onSubmit={submit}>
       <label htmlFor="country-name">{searching ? t.countrySearch : t.countryName}</label>
-      <div className="answer-entry">
+      <div className="answer-entry" ref={answerEntry} onBlur={event => {
+        // A touch can blur the input without a focus target before the option receives click.
+        if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) setOpen(false)
+      }}>
         <input ref={input} id="country-name" type="text" role="combobox" autoComplete="off" spellCheck={false}
           enterKeyHint={searching ? 'search' : undefined}
           placeholder={searching ? t.countrySearch : t.typeName} value={value} aria-autocomplete="list" aria-expanded={expanded}
@@ -112,11 +125,13 @@ function CountryForm(props: CountryFormProps) {
           aria-activedescendant={expanded && highlightedIndex >= 0 ? `option-${highlightedIndex}` : undefined}
           aria-invalid={wrongAnswer !== null} aria-describedby={wrongAnswer !== null ? 'answer-feedback' : undefined}
           onChange={event => { setValue(event.target.value); setOpen(true); setHighlighted(-1); setWrongAnswer(null) }}
-          onFocus={() => setOpen(true)} onBlur={() => setOpen(false)} onKeyDown={navigate} />
+          onFocus={() => setOpen(true)} onKeyDown={navigate} />
         {expanded && <ul className="suggestions" id="country-suggestions" role="listbox" aria-label={t.suggestions}>
-          {suggestions.map((item, index) => <li key={item.code} id={`option-${index}`} role="option"
-            aria-selected={index === highlighted} onPointerDown={event => event.preventDefault()}
-            onClick={() => submitAnswer(item.name, item)}>{item.name}</li>)}
+          {suggestions.map((item, index) => <li key={item.code} role="presentation">
+            <button type="button" tabIndex={-1} id={`option-${index}`} role="option"
+              aria-selected={index === highlighted} onMouseDown={event => event.preventDefault()}
+              onClick={() => submitAnswer(item.name, item)}>{item.name}</button>
+          </li>)}
         </ul>}
       </div>
       {wrongAnswer !== null && <p className="answer-feedback" id="answer-feedback" role="status">
