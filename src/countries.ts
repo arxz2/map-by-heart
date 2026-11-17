@@ -65,5 +65,8 @@ export function countrySuggestions(remaining: Country[], query: string) {
     else if (country.answers.some(answer => answer.startsWith(query))) fromStart.push(country)
     else if (country.wordPrefixes.some(prefix => prefix.startsWith(query))) fromWord.push(country)
   }
-  return [...exact, ...fromStart, ...fromWord].slice(0, 8)
+  const matches = [...exact, ...fromStart, ...fromWord]
+  // The first accepted answer is the name shown in the suggestion.
+  const matchesName = (country: Country) => country.answers[0].includes(query)
+  return [...matches.filter(matchesName), ...matches.filter(country => !matchesName(country))].slice(0, 8)
 }
