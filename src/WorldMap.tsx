@@ -51,8 +51,7 @@ const layouts = {
 }
 type Layout = ReturnType<typeof mapLayout>
 
-const frames: Record<Exclude<Region, 'world'>, [number, number, number, number]> = {
-  europe: [-74, 32, 57, 81],
+const frames: Record<Exclude<Region, 'world' | 'europe'>, [number, number, number, number]> = {
   americas: [-171, -57, -32, 82],
   africa: [-27, -37, 58, 39],
   'middle-east-central-asia': [24, 11, 89, 57],
@@ -64,6 +63,11 @@ function mapHome(region: Region, layout: Layout): View {
   if (region === 'world') {
     const home = { ...globe, y: layout.wrap ? 55 : 0 }
     return viewportHeight === height ? home : clampView({ ...home, y: home.y + (viewportHeight - height) / 2 }, layout)
+  }
+  if (region === 'europe') {
+    const scale = 3
+    const [x, y] = layout.project([-3.5, 54.8])!
+    return clampView({ x: width / 2 - x * scale, y: viewportHeight / 2 - y * scale, scale }, layout)
   }
   const [west, south, east, north] = frames[region]
   const points = [south, (south + north) / 2, north].flatMap(lat =>

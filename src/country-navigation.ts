@@ -45,8 +45,8 @@ export function nextCountry(
   recentSelections: string[],
 ) {
   const candidates = remaining.filter(country => country.code !== lastCode &&
-    (mode === 'random' || !recentSelections.includes(country.code)))
-  if (!candidates.length) return mode === 'random' ? remaining[0] : undefined
+    !recentSelections.includes(country.code))
+  if (!candidates.length) return undefined
   const origin = lastCode && locations.get(lastCode)
   if (mode === 'random' || !origin) return candidates[Math.floor(Math.random() * candidates.length)]
 
